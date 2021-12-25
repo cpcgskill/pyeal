@@ -1,0 +1,9 @@
+{
+  "type": "MayaPlugin",
+  "source": "src",
+  "target": "build",
+  "name": "dg_editor_0_1_0",
+  "exec_script": "import main;main.main()",
+  "log": "log.ico",
+  "annotation": "这是这个插件的注释~"
+}

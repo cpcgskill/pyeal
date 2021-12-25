@@ -1,0 +1,44 @@
+global proc InstallScriptLocator (){}
+
+proc string installationScriptLocation ()
+{
+	string $whatIs=`whatIs InstallScriptLocator`;
+	string $fullPath=`substring $whatIs 25 999`;
+	string $buffer[];
+	string $slash="/";
+	if (`gmatch $whatIs "*\\\\*"`){
+		$slash="\\";
+	}
+	int $numTok=`tokenize $fullPath $slash $buffer`;
+	int $numLetters=size($fullPath);
+	int $numLettersLastFolder=size($buffer[$numTok - 1]);
+	string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+	return $scriptLocation;
+}
+proc startInstall(string $configExecScript, string $ann, string $logf, string $plugin_path){
+	global string $gShelfTopLevel;
+	string $currentShelf = `tabLayout -query -selectTab $gShelfTopLevel`;
+
+	// 获得安装脚本位置
+	string $path=`installationScriptLocation`;
+
+	// 执行脚本
+	string $script="import sys\n";
+	$script += "plugin_path = r'" + $path + $plugin_path + "'\n";
+	$script += "sys.path.append(plugin_path)\n";
+	$script += $configExecScript;
+	//创建工具栏
+	if ($logf == ""){
+		if ($ann == ""){
+			shelfButton -stp python -rpt true -c $script -p $currentShelf;
+		}else{
+			shelfButton -stp python -rpt true -c $script -ann $ann -p $currentShelf;
+		}
+	}else{
+		if ($ann == ""){
+			shelfButton -stp python -rpt true -i1 ($path + $logf) -c $script -p $currentShelf;
+		}else{
+			shelfButton -stp python -rpt true -i1 ($path + $logf) -c $script -ann $ann -p $currentShelf;
+		}
+	}
+}
