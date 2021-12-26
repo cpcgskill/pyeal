@@ -19,7 +19,7 @@ import locale
 
 import astunparse
 
-from seal.res import BaseRes
+from pyeal.res import BaseRes
 
 from module_data import ModuleData
 
@@ -171,7 +171,7 @@ class InstallBuilder(BuilderBase):
 
 if __name__ == "__main__":
 
-    from seal.res import LocalRes, DirectoryRes
+    from pyeal.res import LocalRes, DirectoryRes
 
     root = r"D:\backup_to_cloud\dev\python_for_maya\package\seal\test"
     src = LocalRes(root + r"\src")

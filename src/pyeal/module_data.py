@@ -11,7 +11,7 @@ u"""
 """
 from __future__ import unicode_literals, print_function
 
-from seal.res import BaseRes
+from pyeal.res import BaseRes
 
 
 def file_ext(filename, sep='/'):

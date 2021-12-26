@@ -14,9 +14,9 @@ import json
 import os.path
 import sys
 
-from seal.utils import read_string, write_string
-from seal.res import LocalRes, DirectoryRes
-from seal.core import EncapsulationBuilder, InstallBuilder
+from pyeal.utils import read_string, write_string
+from pyeal.res import LocalRes, DirectoryRes
+from pyeal.core import EncapsulationBuilder, InstallBuilder
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 

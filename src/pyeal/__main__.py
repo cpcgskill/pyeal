@@ -9,6 +9,6 @@ u"""
 :bilibili: https://space.bilibili.com/351598127
 
 """
-import seal
+import pyeal
 if __name__ == "__main__":
-    seal.main()
+    pyeal.main()
