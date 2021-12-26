@@ -16,7 +16,7 @@
 
 ```commandline
 pip install pyeal
-python -m seal init
+python -m pyeal init
 ```
 
 ### 功能介绍
