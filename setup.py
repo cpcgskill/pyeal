@@ -35,7 +35,7 @@ setuptools.setup(
     package_dir={"": "src"},
     # 不使用自动搜索
     # packages=setuptools.find_packages(where="src"),
-    packages=["seal"],
+    packages=["pyeal"],
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*",
     # 指定依赖
     install_requires=[
