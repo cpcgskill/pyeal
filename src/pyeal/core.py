@@ -21,7 +21,7 @@ import astunparse
 
 from pyeal.res import BaseRes
 
-from module_data import ModuleData
+from pyeal.module_data import ModuleData
 
 
 def replace_node(rn, t, key):

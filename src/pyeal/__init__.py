@@ -75,7 +75,7 @@ config_json_template = r'''{
 
 
 def input_string(s):
-    sys.stdout.write(s.encode("utf-8"))
+    sys.stdout.write(s)
     return sys.stdin.readline().strip("\n")
 
 
