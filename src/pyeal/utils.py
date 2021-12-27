@@ -14,12 +14,29 @@ from __future__ import unicode_literals, print_function
 import os
 
 
-def read_string(filename):
+def read(filename):
     """
     :type filename: unicode
     """
     with open(filename, 'rb') as f:
-        return f.read().decode("utf-8")
+        return f.read()
+
+
+def write(filename, b):
+    """
+
+    :type filename: unicode
+    :type b: bytes
+    """
+    with open(filename, 'rb') as f:
+        return f.write(b)
+
+
+def read_string(filename):
+    """
+    :type filename: unicode
+    """
+    return read(filename).decode("utf-8")
 
 
 def write_string(filename, s):
@@ -28,8 +45,7 @@ def write_string(filename, s):
     :type filename: unicode
     :type s: unicode
     """
-    with open(filename, 'rb') as f:
-        return f.write(s.encode("utf-8"))
+    write(filename, s.encode("utf-8"))
 
 
 def all_files(path):

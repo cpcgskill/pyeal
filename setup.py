@@ -8,7 +8,7 @@ with open("README.md", "rb") as f:
 
 setuptools.setup(
     name="pyeal",
-    version="0.1.2",
+    version="0.1.3",
     author="cpcgskill",
     author_email="cpcgskill@outlook.com",
     description="Python 打包编译工具",

@@ -1,4 +1,4 @@
-# seal
+# pyeal
 
 新的 Python 打包编译工具
 

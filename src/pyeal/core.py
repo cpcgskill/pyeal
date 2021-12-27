@@ -26,15 +26,16 @@ from pyeal.module_data import ModuleData
 
 def replace_node(rn, t, key):
     if hasattr(rn, "body"):
-        body = []
-        for n in rn.body:
-            if isinstance(n, t):
-                body.append(key(n))
-            else:
-                body.append([n])
-        rn.body = [ii for i in body for ii in i]
-        for n in rn.body:
-            replace_node(n, t, key)
+        if isinstance(rn.body, list):
+            body = []
+            for n in rn.body:
+                if isinstance(n, t):
+                    body.append(key(n))
+                else:
+                    body.append([n])
+            rn.body = [ii for i in body for ii in i]
+            for n in rn.body:
+                replace_node(n, t, key)
 
 
 class BuilderBase(object):
@@ -170,7 +171,6 @@ class InstallBuilder(BuilderBase):
 
 
 if __name__ == "__main__":
-
     from pyeal.res import LocalRes, DirectoryRes
 
     root = r"D:\backup_to_cloud\dev\python_for_maya\package\seal\test"
