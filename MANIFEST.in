@@ -1,2 +1,2 @@
-include src/seal/log.ico
-include src/seal/mel_template_lib.mel
+include src/pyeal/log.ico
+include src/pyeal/mel_template_lib.mel
