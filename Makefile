@@ -8,13 +8,13 @@ clean:
 	rm -fr ./build
 	rm -fr ./dist
 
-dist: clean
+dist:
 	"${MAYA_PY}" -m pip install 'twine>=1.5.0'
 	"${MAYA_PY}" setup.py sdist bdist_wheel
 
-publish: dist
+publish: clean dist
 	"${MAYA_PY}" -m twine upload --repository pypi dist/*
 
-test_publish: dist
+test_publish: clean dist
 	"${MAYA_PY}" -m twine upload --repository testpypi dist/*
 

@@ -11,6 +11,7 @@ u"""
 """
 from __future__ import unicode_literals, print_function
 
+import uuid
 from abc import abstractmethod
 
 import ast
@@ -38,6 +39,22 @@ def replace_node(rn, t, key):
                 replace_node(n, t, key)
 
 
+def delete_node(rn, key):
+    deleted_nodes = []
+    if hasattr(rn, "body"):
+        if isinstance(rn.body, list):
+            body = []
+            for n in rn.body:
+                if key(n):
+                    deleted_nodes.append(n)
+                else:
+                    body.append(n)
+            rn.body = body
+            for n in rn.body:
+                deleted_nodes.extend(delete_node(n, key))
+    return deleted_nodes
+
+
 class BuilderBase(object):
     def __init__(self, source, target):
         """
@@ -55,24 +72,26 @@ class BuilderBase(object):
 class EncapsulationBuilder(BuilderBase):
     """打包编译器"""
 
-    def __init__(self, source, target, name, code, exec_file_name="exec.py"):
+    def __init__(self, source, target, name, code):
         """
         :type source: BaseRes
         :type target: BaseRes
         :type name: unicode
-        :type exec_file_name: unicode
         """
         super(EncapsulationBuilder, self).__init__(source, target)
         self.name = name
         self.code = code
-        self.exec_file_name = exec_file_name
         self.module_data = ModuleData(self.source)
+        self.uid = uuid.uuid4().hex[0:2]
+
+    def seal_name(self):
+        return "{}_{}".format(self.name, self.uid)
 
     def target_name(self, p):
-        return "{}_{}".format(self.name, p)
+        return "{}.{}".format(self.seal_name(), p)
 
     def target_path(self, p):
-        return "{}_{}".format(self.name, p)
+        return "{}/{}".format(self.seal_name(), p)
 
     def compile_import_node(self, n, m):
         alias_list = []
@@ -83,11 +102,18 @@ class EncapsulationBuilder(BuilderBase):
                 r_find_name = self.module_data.relative_find_module(i.name, m)
             name = self.module_data.find_module(i.name)
             if r_find_name is None and name is not None:
-                target_name = self.target_name(name)
-                alias_list.append(ast.alias(asname=name.split(".")[0],
-                                            name=target_name.split(".")[0]))
-                alias_list.append(ast.alias(asname=i.asname,
-                                            name=target_name))
+                if i.asname is None:
+                    alias_list.append(ast.alias(asname=i.name.split(".")[0],
+                                                name=self.target_name(i.name.split('.')[0])))
+                    alias_list.append(ast.alias(asname="_",
+                                                name=self.target_name(name)))
+                else:
+                    target_asname = i.asname
+                    alias_list.append(ast.alias(asname="_",
+                                                name=self.target_name(i.name.split('.')[0])))
+                    alias_list.append(ast.alias(asname=target_asname,
+                                                name=self.target_name(name)))
+
             else:
                 alias_list.append(i)
         return [ast.Import(names=[i]) for i in alias_list]
@@ -110,33 +136,71 @@ class EncapsulationBuilder(BuilderBase):
         else:
             return [n]
 
+    def delete_future(self, n):
+        if isinstance(n, ast.ImportFrom):
+            if n.level == 0:
+                if n.module == "__future__":
+                    return True
+        return False
+
     def compile_module(self, code, m):
         """
         :type code: bytes
         :type m: unicode|None
         :return:
         """
+        # print("compile_module: ", m)
+
         node = ast.parse(code)
+
+        if m is not None:
+            m_split = m.split('.')
+            if (len(m_split) == 2 and m_split[1] == "__init__") or len(m_split) <= 1:
+                head_code = [
+                    "import sys",
+                    'sys.modules[{0}].{1} = sys.modules[{2}]'.format(repr(self.seal_name()),
+                                                                     m_split[0],
+                                                                     repr("{}.{}".format(self.seal_name(), m_split[0]))),
+                ]
+                for i in reversed(ast.parse("\n".join(head_code)).body):
+                    node.body.insert(0, i)
+
+
 
         replace_node(node, ast.Import, key=lambda n: self.compile_import_node(n, m))
         replace_node(node, ast.ImportFrom, key=lambda n: self.compile_import_from_node(n, m))
+        deleted_future = delete_node(node, key=self.delete_future)
+        for i in reversed(deleted_future):
+            node.body.insert(0, i)
+
         code = astunparse.unparse(node)
+
         return code.encode("utf-8")
 
     def build(self):
-        compiled = set()
+        for f in self.source.files():
+            self.target.write(self.target_path(f), self.source.read(f))
         for m, f in self.module_data.module_name_and_paths():
-            if f in compiled:
-                continue
-            compiled.add(f)
             code = self.source.read(f)
             code = self.compile_module(code, m)
             self.target.write(self.target_path(f), code)
+        if not "__init__" in self.module_data.lib_names():
+            self.target.write(self.target_path("__init__.py"), b"")
         code = self.compile_module(self.code, None)
-        self.target.write(self.exec_file_name, code)
-        for f in self.source.files():
-            if not f in compiled:
-                self.target.write(f, self.source.read(f))
+        self.target.write(self.name + ".py", code)
+        # compiled = set()
+        # for m, f in self.module_data.module_name_and_paths():
+        #     if f in compiled:
+        #         continue
+        #     compiled.add(f)
+        #     code = self.source.read(f)
+        #     code = self.compile_module(code, m)
+        #     self.target.write(self.target_path(f), code)
+        # code = self.compile_module(self.code, None)
+        # self.target.write(self.exec_file_name, code)
+        # for f in self.source.files():
+        #     if not f in compiled:
+        #         self.target.write(f, self.source.read(f))
 
 
 class InstallBuilder(BuilderBase):
@@ -150,19 +214,20 @@ class InstallBuilder(BuilderBase):
     <<plugin_path>>
     );'''
 
-    def __init__(self, source, target, log, ann, install_mel_name="install.mel", exec_file_name="exec.py"):
+    def __init__(self, source, target, log, ann, name, install_mel_name="install.mel", exec_file_name="exec.py"):
         super(InstallBuilder, self).__init__(source, target)
         self.install_mel_name = install_mel_name
         self.exec_file_name = exec_file_name
         self.log = log
         self.ann = ann
+        self.name = name
 
     def build(self):
         plugin_path = "dist/plugin"
         for f in self.source.files():
             self.target.write(self.target.sep().join((plugin_path, f)), self.source.read(f))
         t = self.mel_template
-        t = t.replace("<<exec_file_name>>", '"\'{}\'"'.format(self.exec_file_name))
+        t = t.replace("<<exec_file_name>>", '"\'{}.py\'"'.format(self.name))
         t = t.replace("<<ann>>", '"{}"'.format(self.ann))
         t = t.replace("<<plugin_path>>", '"{}/"'.format(plugin_path))
         # 以系统编码写入安装文件
