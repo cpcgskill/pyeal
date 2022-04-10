@@ -8,13 +8,13 @@ with open("README.md", "rb") as f:
 
 setuptools.setup(
     name="pyeal",
-    version="0.1.4",
+    version="0.1.5",
     author="cpcgskill",
     author_email="cpcgskill@outlook.com",
     description="Python 打包编译工具",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/cpcgskill/seal",
+    url="https://github.com/cpcgskill/pyeal",
     project_urls={
         "Bug Tracker": "https://github.com/cpcgskill/seal/issues",
     },
@@ -42,5 +42,12 @@ setuptools.setup(
         'astunparse==1.6.3',
     ],
     # 指定启用包数据如log.ico这样的文件
-    include_package_data=True
+    include_package_data=True,
+
+    entry_points={
+        # 控制台脚本
+        "console_scripts": [
+            "pyeal=pyeal.cli:main",
+        ],
+    },
 )

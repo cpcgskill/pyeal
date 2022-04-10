@@ -32,6 +32,12 @@ class BaseRes(object):
         """
 
     @abstractmethod
+    def clean(self):
+        """
+        :rtype:
+        """
+
+    @abstractmethod
     def sep(self):
         """
         :rtype: unicode
@@ -73,6 +79,19 @@ class LocalRes(BaseRes):
         with open(p, "wb") as f:
             return f.write(data)
 
+    def clean(self):
+        file_list = []
+        dir_list = []
+        for root, ds, fs in os.walk(self.root):
+            for i in fs:
+                file_list.append(self.sep().join([root, i]))
+            for i in ds:
+                dir_list.append(self.sep().join([root, i]))
+        for i in file_list:
+            os.remove(i)
+        for i in reversed(dir_list):
+            os.rmdir(i)
+
     def sep(self):
         return os.sep
 
@@ -111,6 +130,7 @@ class DirectoryRes(BaseRes):
                 if self.dir == rs[0]:
                     r = self.sep().join(rs[1:])
                     yield None if r == "" else r, fs
+
 
 if __name__ == "__main__":
     for i in LocalRes(r"D:\backup_to_cloud\dev\python_for_maya\package\seal").walk():
