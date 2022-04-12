@@ -51,6 +51,9 @@ class Config(object):
             script = self.root_res.read(index_module)
         return script
 
+    def get_icon(self):
+        return self.root_res.read('icon.ico')
+
     def get(self, key, default=None):
         return self.config.get(key, default)
 
@@ -75,8 +78,7 @@ def target_is_maya_plugin(config):
     build = LocalRes(config.build)
     m0 = DirectoryRes(build, "m0")
     dist = DirectoryRes(build, "dist")
-    log = config.get("log", "log.ico")
-    log = root.read(log)
+    log = config.get_icon()
     annotation = config.get("annotation", "这个插件作者很懒没有写注释哦~")
 
     exec_script = config.get_script()
@@ -91,9 +93,6 @@ def target_is_exec(config):
     lib = LocalRes(config.lib)
     build = LocalRes(config.build)
 
-    # m0 = DirectoryRes(target, "m0")
-    # m1 = DirectoryRes(target, "m1")
-
     exec_script = config.get_script()
 
     EncapsulationBuilder(MergeRes(src, lib), build, config.name, exec_script).build()
@@ -105,7 +104,7 @@ target_types = {
 }
 
 
-def build(root):
+def cmd_build(root):
     config = Config(root)
 
     build = LocalRes(config.build)
@@ -128,7 +127,7 @@ config_templates = {
 }
 
 
-def init(root):
+def cmd_init(root):
     config_json_path = os.sep.join((root, "pyeal.json"))
     with open(config_json_path, "wb") as f:
         config = config_templates["maya-plugin"]
@@ -145,16 +144,16 @@ def init(root):
         os.makedirs(build)
 
 
-def clean(root):
+def cmd_clean(root):
     config = Config(root)
     target = LocalRes(config.build)
     target.clean()
 
 
 commands = {
-    "build": build,
-    "init": init,
-    "clean": clean,
+    "build": cmd_build,
+    "init": cmd_init,
+    "clean": cmd_clean,
 }
 
 
