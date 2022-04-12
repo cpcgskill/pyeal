@@ -17,14 +17,9 @@ from collections import OrderedDict
 
 from pyeal.res import LocalRes, DirectoryRes, MergeRes
 from pyeal.core import EncapsulationBuilder, InstallBuilder
+from pyeal.exc import *
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-
-
-class SealException(Exception): pass
-
-
-class ConfigException(Exception): pass
 
 
 class Config(object):

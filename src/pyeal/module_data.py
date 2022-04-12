@@ -12,6 +12,7 @@ u"""
 from __future__ import unicode_literals, print_function
 
 from pyeal.res import BaseRes
+from pyeal.exc import *
 
 
 def file_ext(filename, sep='/'):
@@ -20,10 +21,6 @@ def file_ext(filename, sep='/'):
 
 def file_name(filename):
     return filename.split(".")[0]
-
-
-class ModuleDataException(Exception):
-    pass
 
 
 class ModuleData(object):

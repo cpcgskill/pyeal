@@ -14,6 +14,8 @@ from __future__ import unicode_literals, print_function
 import os
 from abc import abstractmethod
 
+from pyeal.exc import *
+
 
 class BaseRes(object):
     @abstractmethod
@@ -157,7 +159,7 @@ class MergeRes(BaseRes):
                 return r.read(p)
             except:
                 pass
-        raise
+        raise ResException("找不到对应文件")
 
     def write(self, p, data):
         return self.res[0].write(p, data)
