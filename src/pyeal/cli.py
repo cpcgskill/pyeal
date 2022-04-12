@@ -16,7 +16,7 @@ import sys
 from collections import OrderedDict
 
 from pyeal.utils import read_string, write_string
-from pyeal.res import LocalRes, DirectoryRes
+from pyeal.res import LocalRes, DirectoryRes, MergeRes
 from pyeal.core import EncapsulationBuilder, InstallBuilder
 
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -33,12 +33,13 @@ class Config(object):
         root = os.path.abspath(root)
         self.root = root
         self.root_res = LocalRes(root)
-        config = json.loads(self.root_res.read("pyeal.json").decode("utf-8"))
+        config = json.loads(self.root_res.read_string("pyeal.json"))
         self.config = config
 
         self.type = config["type"]
-        self.source = self.root_res.sep().join((root, config["source"]))
-        self.target = self.root_res.sep().join((root, config["target"]))
+        self.src = self.root_res.sep().join((root, 'src'))
+        self.lib = self.root_res.sep().join((root, 'lib'))
+        self.build = self.root_res.sep().join((root, 'build'))
         self.name = config["name"]
         # self.exec_script = config["exec_script"]
         # self.log = config["log"]
@@ -61,36 +62,42 @@ class Config(object):
         return c
 
     def __str__(self):
-        return """{}<{}:type={}, source={}, target={}>""".format(self.__class__.__name__,
-                                                                 self.name,
-                                                                 self.type,
-                                                                 self.source,
-                                                                 self.target)
+        return """{}<{}:type={}, src={}, build={}>""".format(self.__class__.__name__,
+                                                             self.name,
+                                                             self.type,
+                                                             self.src,
+                                                             self.build)
 
 
 def target_is_maya_plugin(config):
     root = LocalRes(config.root)
-    source = LocalRes(config.source)
-    target = LocalRes(config.target)
-    m0 = DirectoryRes(target, "m0")
-    dist = DirectoryRes(target, "dist")
+    src = LocalRes(config.src)
+    lib = LocalRes(config.lib)
+    build = LocalRes(config.build)
+    m0 = DirectoryRes(build, "m0")
+    dist = DirectoryRes(build, "dist")
     log = config.get("log", "log.ico")
     log = root.read(log)
     annotation = config.get("annotation", "这个插件作者很懒没有写注释哦~")
 
     exec_script = config.get_script()
 
-    EncapsulationBuilder(source, m0, config.name, exec_script).build()
+    EncapsulationBuilder(MergeRes(src, lib), m0, config.name, exec_script).build()
     InstallBuilder(m0, dist, log=log, ann=annotation, name=config.name).build()
 
 
 def target_is_exec(config):
     root = LocalRes(config.root)
-    source = LocalRes(config.source)
-    target = LocalRes(config.target)
+    src = LocalRes(config.src)
+    lib = LocalRes(config.lib)
+    build = LocalRes(config.build)
+
+    # m0 = DirectoryRes(target, "m0")
+    # m1 = DirectoryRes(target, "m1")
+
     exec_script = config.get_script()
 
-    EncapsulationBuilder(source, target, config.name, exec_script).build()
+    EncapsulationBuilder(MergeRes(src, lib), build, config.name, exec_script).build()
 
 
 target_types = {
@@ -99,11 +106,11 @@ target_types = {
 }
 
 
-def go(root):
+def build(root):
     config = Config(root)
 
-    target = LocalRes(config.target)
-    target.clean()
+    build = LocalRes(config.build)
+    build.clean()
 
     target_type_func = target_types.get(config.type)
     if target_type_func is None:
@@ -141,12 +148,12 @@ def init(root):
 
 def clean(root):
     config = Config(root)
-    target = LocalRes(config.target)
+    target = LocalRes(config.build)
     target.clean()
 
 
 commands = {
-    "go": go,
+    "build": build,
     "init": init,
     "clean": clean,
 }

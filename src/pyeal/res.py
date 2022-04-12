@@ -31,8 +31,14 @@ class BaseRes(object):
         :return:
         """
 
+    def read_string(self, p):
+        return self.read(p).decode('utf-8')
+
+    def write_string(self, p, s):
+        self.write(p, s.encode('utf-8'))
+
     @abstractmethod
-    def clean(self):
+    def clean(self, p=None):
         """
         :rtype:
         """
@@ -79,10 +85,11 @@ class LocalRes(BaseRes):
         with open(p, "wb") as f:
             return f.write(data)
 
-    def clean(self):
+    def clean(self, p=None):
         file_list = []
         dir_list = []
-        for root, ds, fs in os.walk(self.root):
+        root = self.root if p is None else self.sep().join([self.root, p])
+        for root, ds, fs in os.walk(root):
             for i in fs:
                 file_list.append(self.sep().join([root, i]))
             for i in ds:
@@ -123,6 +130,10 @@ class DirectoryRes(BaseRes):
     def sep(self):
         return self.res.sep()
 
+    def clean(self, p=None):
+        p = self.dir if p is None else self.new_path(p)
+        self.res.clean(p)
+
     def walk(self):
         for r, fs in self.res.walk():
             if r is not None and self.dir in r:
@@ -130,6 +141,38 @@ class DirectoryRes(BaseRes):
                 if self.dir == rs[0]:
                     r = self.sep().join(rs[1:])
                     yield None if r == "" else r, fs
+
+
+class MergeRes(BaseRes):
+    def __init__(self, *res):
+        """
+
+        :type res: BaseRes
+        """
+        self.res = res
+
+    def read(self, p):
+        for r in self.res:
+            try:
+                return r.read(p)
+            except:
+                pass
+        raise
+
+    def write(self, p, data):
+        return self.res[0].write(p, data)
+
+    def sep(self):
+        return self.res[0].sep()
+
+    def clean(self, p=None):
+        for r in self.res:
+            r.clean(p)
+
+    def walk(self):
+        for r in self.res:
+            for r, fs in r.walk():
+                yield r, fs
 
 
 if __name__ == "__main__":
