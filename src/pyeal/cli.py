@@ -15,7 +15,6 @@ import os.path
 import sys
 from collections import OrderedDict
 
-from pyeal.utils import read_string, write_string
 from pyeal.res import LocalRes, DirectoryRes, MergeRes
 from pyeal.core import EncapsulationBuilder, InstallBuilder
 
