@@ -35,9 +35,6 @@ class Config(object):
         self.lib = self.root_res.sep().join((root, 'lib'))
         self.build = self.root_res.sep().join((root, 'build'))
         self.name = config["name"]
-        # self.exec_script = config["exec_script"]
-        # self.log = config["log"]
-        # self.annotation = config["annotation"]
 
     def get_script(self):
         script = self.config.get("exec_script", None)

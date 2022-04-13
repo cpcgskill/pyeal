@@ -1,6 +1,6 @@
 # -*-coding:utf-8 -*-
 u"""
-:创建时间: 2022/4/12 20:10
+:创建时间: 2022/4/13 23:33
 :作者: 苍之幻灵
 :我的主页: https://cpcgskill.com
 :QQ: 2921251087
@@ -9,16 +9,3 @@ u"""
 :bilibili: https://space.bilibili.com/351598127
 
 """
-
-
-class SealException(Exception): pass
-
-
-class ConfigException(SealException): pass
-
-
-class ModuleDataException(SealException): pass
-
-
-class ResException(SealException): pass
-
