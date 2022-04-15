@@ -10,16 +10,119 @@ u"""
 
 """
 from __future__ import unicode_literals, print_function
-
+from . import os, sys as s
 import os as o, sys as s
 from abc import abstractmethod as a, get_cache_token as g
 
 from pyeal.exc import *
 
+def undo_block(fn):
+    @functools.wraps(fn)
+    def _(*args, **kwargs):
+        mc.undoInfo(ock=True)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            mc.undoInfo(cck=True)
+
+    return _
+
+def test(a, b=0, c=1, *args, **kwargs):
+    pass
+test(0, 1, *[3, 4, 5], c=3, **{a:'s'})
+
+if r is not None and self.dir and 1 or 2 in r:
+    rs = r.split(self.sep())
+    if self.dir == rs[0]:
+        r = self.sep().join(rs[1:])
+        yield None if r == "" else r, fs
+
 +a
 -a
+~1
+1 > 0
+1 < 0
+1 >= 0
+1 <= 0
+1 == 0
+1 != 0
+1 + 0
+1 - 0
+1 * 0
+1 / 0
+1 & 0
+1 | 0
+1 ^ 0
+1 >> 0
+1 << 0
+1 < 0
+1 > 0
+1 ** 1
+1 // 1
+"%s:" % 'get '
 
+a += 1
+a *= 1
+a /= 1
+a -= 1
+a ^= 1
+a &= 1
+a |= 1
+a <<= 1
+a >>= 1
+a //= 1
+a **= 1
+
+s = [(i, t) for i in range(10) if i > 0 if i < 0 for t in range(10) if i != -1 if i > 0]
+
+s = {i: 0 for i in range(10)}
+s = {i for i in range(10)}
+s = [i for i in range(10)]
+s = (i for i in range(10))
+
+if True:
+    pass
+elif True:
+    pass
+elif True:
+    pass
+else:
+    pass
+a = (1,)
+b = [1, ]
+c = {1, }
+d = {1: 1}
+global a, b, c
+
+try:
+    pass
+except Exception as e:
+    pass
+except:
+    pass
+else:
+    pass
+finally:
+    pass
+with open('./astunparse_test_file.py', 'rb'):
+    pass
+with open('./astunparse_test_file.py', 'rb') as f:
+    test_code = f.read()
+for i in range(10):
+    pass
+while True:
+    pass
+
+assert True
+assert True, "msg"
+raise
+raise IndexError
+raise IndexError("error")
+
+@abstractmethod
 class BaseRes(object):
+    t = 1
+
     @abstractmethod
     def read(self, p):
         """
@@ -64,8 +167,8 @@ class BaseRes(object):
         for r, fs in self.walk():
             for f in fs:
                 if r is not None:
-                    ((xx, ), xxx)[0, 0:, ::] = ((1, ), 2)
-                    xxx, = (1, )
+                    ((xx,), xxx)[0, 0:, ::] = ((1,), 2)
+                    xxx, = (1,)
                     f = self.sep().join((r, f))
                 yield f
 
@@ -193,4 +296,118 @@ class MergeRes(BaseRes):
 
 if __name__ == "__main__":
     for i in LocalRes(r"D:\backup_to_cloud\dev\python_for_maya\package\seal").walk():
-        print(i)
+        print(i, *(0, 1), sep="-")
+import cpmel.cmds as cc
+from rig_lib.ctx import Ctx
+from rig_lib.joint_tree import create_real_joints_from_root
+from rig_lib_feather import gen_feather
+from rig_lib_name import enter_new_name_space
+import rig_lib_shape as shape
+
+from cpform import item, core
+from maya_utils import call_block
+
+
+@call_block
+def call(p_con, p_joint, con_nurbs_surface, con_curve, ik_count, fk_count):
+    ctx = Ctx()
+    p_con = cc.new_object(p_con)
+    p_joint = cc.new_object(p_joint)
+    con_nurbs_surface = cc.new_object(con_nurbs_surface)
+    con_curve = cc.new_object(con_curve)
+    jins = cc.selected()
+    # pickWalk -d down;
+    cc.pickWalk(d='down')
+    end_jins = cc.selected()
+    main_con = cc.curve(d=1, p=[(0.0955899456935, 0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, 0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, -0.0955899456935, 0.824480077314),
+                                (0.0955899456935, -0.0955899456935, 0.824480077314),
+                                (0.0955899456935, 0.0955899456935, 0.824480077314),
+                                (0.0955899456935, 0.0955899456935, 0.633300185927),
+                                (0.0955899456935, -0.0955899456935, 0.633300185927),
+                                (0.0955899456935, -0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, -0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, -0.0955899456935, 0.633300185927),
+                                (-0.0955899456935, 0.0955899456935, 0.633300185927),
+                                (-0.0955899456935, 0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, -0.0955899456935, 0.824480077314),
+                                (-0.0955899456935, -0.0955899456935, 0.633300185927),
+                                (0.0955899456935, -0.0955899456935, 0.633300185927),
+                                (0.0955899456935, 0.0955899456935, 0.633300185927),
+                                (-0.0955899456935, 0.0955899456935, 0.633300185927),
+                                (-0.0955899456935, -0.0955899456935, 0.633300185927)],
+                        k=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+                           17.0])
+    shape.setColorId(main_con, 6)
+
+    ik_con = cc.curve(d=1, p=[(0.35, 0.35, 0.35),
+                              (-0.35, 0.35, 0.35),
+                              (-0.35, -0.35, 0.35),
+                              (0.35, -0.35, 0.35),
+                              (0.35, 0.35, 0.35),
+                              (0.35, 0.35, -0.35),
+                              (0.35, -0.35, -0.35),
+                              (0.35, -0.35, 0.35),
+                              (-0.35, -0.35, 0.35),
+                              (-0.35, -0.35, -0.35),
+                              (-0.35, 0.35, -0.35),
+                              (-0.35, 0.35, 0.35),
+                              (-0.35, -0.35, 0.35),
+                              (-0.35, -0.35, -0.35),
+                              (0.35, -0.35, -0.35),
+                              (0.35, 0.35, -0.35),
+                              (-0.35, 0.35, -0.35),
+                              (-0.35, -0.35, -0.35)],
+                      k=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+                         17.0])
+    shape.setColorId(ik_con, 14)
+
+    fk_con = cc.curve(d=1, p=[(1.09237352925e-33, 0.291346265418, -1.78398135694e-17),
+                              (-1.261465315e-17, 0.20601291995, 0.20601291995),
+                              (-1.78398135694e-17, 1.78398135694e-17, 0.291346265418),
+                              (-1.261465315e-17, -0.20601291995, 0.20601291995),
+                              (-1.09237352925e-33, -0.291346265418, 1.78398135694e-17),
+                              (1.261465315e-17, -0.20601291995, -0.20601291995),
+                              (1.78398135694e-17, -1.78398135694e-17, -0.291346265418),
+                              (1.261465315e-17, 0.20601291995, -0.20601291995),
+                              (1.09237352925e-33, 0.291346265418, -1.78398135694e-17)],
+                      k=[0.0, 0.7653668647301797, 1.5307337294603593, 2.296100594190539, 3.0614674589207187,
+                         3.8268343236508984, 4.592201188381078, 5.357568053111258, 6.122934917841437])
+    shape.setColorId(fk_con, 13)
+
+    try:
+        with ctx.enter_new_tag_rt('radiant_joint_tool'):
+            for id_, (jin, end_jin) in enumerate(zip(jins, end_jins)):
+                with enter_new_name_space("{}_".format(jin.name())):
+                    g = gen_feather(ctx,
+                                    jin, end_jin,
+                                    con_nurbs_surface, con_curve,
+                                    ik_count, fk_count,
+                                    ["id_{}".format(id_)])
+                    p_con.add_child(g)
+            create_real_joints_from_root(ctx.root_joint, p_joint)
+            for i in ctx.filter().tag_equal('controller').tag_equal('feather'):
+                shape.replace(i, main_con)
+            for i in ctx.filter().tag_equal('controller').tag_equal('ik').tag_equal('feather_secondary'):
+                shape.replace(i, ik_con)
+            for i in ctx.filter().tag_equal('controller').tag_equal('fk').tag_equal('feather_secondary'):
+                shape.replace(i, fk_con)
+
+    finally:
+        cc.delete(main_con, ik_con, fk_con)
+
+
+def show():
+    core.log_docker(title='radiant_joint_tool', doit_text="选择羽毛关节", form=(
+        item.Select("父控制器"),
+        item.Select("父蒙皮关节"),
+        item.Select("控制曲面"),
+        item.Select("控制曲线"),
+        item.IntSlider("Ik控制器数量", 2, 10, 3),
+        item.IntSlider("Fk控制器数量", 2, 10, 5),
+    ), func=call)
+
+
+if __name__ == "__main__":
+    show()

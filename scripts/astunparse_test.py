@@ -10,7 +10,7 @@ u"""
 
 """
 from __future__ import unicode_literals, print_function, division
-import pyeal.astunparse as astunparse
+import pyeal.code.astunparse as astunparse
 
 with open('./astunparse_test_file.py', 'rb') as f:
     test_code = f.read()
@@ -18,7 +18,7 @@ with open('./astunparse_test_file.py', 'rb') as f:
 
 def test():
     tree = astunparse.parser(test_code)
-    code = astunparse.unparser(tree)
+    code = astunparse.unparse(tree)
     print(code)
 
 

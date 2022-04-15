@@ -29,9 +29,10 @@ class Unparser(object):
             f = io.StringIO()
         self.f = f
         self.col_off = 0
-        self._dispatch(tree)
         # 记录最后一个写入的字符串， 配合_write_code， _write_line方法可以避免不必要的空行
         self.end_char = ''
+
+        self._dispatch(tree)
 
     def _write_code(self, *s):
         if len(s) > 0:
@@ -52,7 +53,8 @@ class Unparser(object):
 
     @contextlib.contextmanager
     def _write_line(self):
-        self._write_code('    ' * self.col_off)
+        if self.end_char == '\n':
+            self._write_code('    ' * self.col_off)
         yield
         if self.end_char != '\n':
             self._write_code('\n')
@@ -70,15 +72,29 @@ class Unparser(object):
             self._dispatch_boolop(node)
         elif isinstance(node, ast.operator):
             self._dispatch_operator(node)
+        elif isinstance(node, ast.cmpop):
+            self._dispatch_cmpop(node)
 
-        elif isinstance(node, ast.Module):
-            self._module(node)
+
+        elif isinstance(node, ast.mod):
+            self._dispatch_mod(node)
+
         elif isinstance(node, ast.ExceptHandler):
             self._except_handler(node)
+        elif isinstance(node, ast.comprehension):
+            self._comprehension(node)
 
-        elif isinstance(node, ast.cmpop):
-            self._cmpop(node)
+        else:
+            raise SealException("无法识别的节点: ", node)
 
+    def _dispatch_mod(self, node):
+        """
+        :type node: ast.mod
+        """
+        if False:
+            pass
+        elif isinstance(node, ast.Module):
+            self._module(node)
         else:
             raise SealException("无法识别的节点: ", node)
 
@@ -113,8 +129,11 @@ class Unparser(object):
         if False:
             pass
         elif isinstance(node, ast.Yield):
-            self._write_code('yield ')
-            self._dispatch(node.value)
+            if node.value is None:
+                self._write_code('yield')
+            else:
+                self._write_code('yield ')
+                self._dispatch(node.value)
 
         elif isinstance(node, ast.Attribute):
             self._attribute(node)
@@ -131,6 +150,8 @@ class Unparser(object):
             self._unary_op(node)
         elif isinstance(node, ast.BoolOp):
             self._bool_op(node)
+        elif isinstance(node, ast.BinOp):
+            self._bin_op(node)
 
         elif isinstance(node, ast.Set):
             self._set(node)
@@ -140,6 +161,15 @@ class Unparser(object):
             self._list(node)
         elif isinstance(node, ast.Tuple):
             self._tuple(node)
+
+        elif isinstance(node, ast.DictComp):
+            self._dict_comp(node)
+        elif isinstance(node, ast.SetComp):
+            self._set_comp(node)
+        elif isinstance(node, ast.ListComp):
+            self._list_comp(node)
+        elif isinstance(node, ast.GeneratorExp):
+            self._generator_exp(node)
 
         elif isinstance(node, ast.Str):
             self._str(node)
@@ -170,16 +200,27 @@ class Unparser(object):
         elif isinstance(node, ast.Pass):
             self._write_code('pass')
         elif isinstance(node, ast.Raise):
-            self._write_code('raise ')
-            self._dispatch(node.type)
+            if node.type is None:
+                self._write_code('raise')
+            else:
+                self._write_code('raise ')
+                self._dispatch(node.type)
+        elif isinstance(node, ast.Assert):
+            self._write_code('assert ')
+            self._dispatch(node.test)
+            if node.msg is not None:
+                self._write_code(', ')
+                self._dispatch(node.msg)
         elif isinstance(node, ast.Global):
-            self._write_code('global ', *node.names)
+            self._write_code('global ', ', '.join(node.names))
+        elif isinstance(node, ast.Continue):
+            self._write_code('continue')
 
         elif isinstance(node, ast.AugAssign):
             self._dispatch(node.target)
-            self._write_code(' = ')
-            self._dispatch(node.target)
+            self._write_code(' ')
             self._dispatch(node.op)
+            self._write_code('= ')
             self._dispatch(node.value)
 
         elif isinstance(node, ast.Expr):
@@ -193,6 +234,8 @@ class Unparser(object):
 
         elif isinstance(node, ast.With):
             self._with(node)
+        elif isinstance(node, ast.While):
+            self._while(node)
         elif isinstance(node, ast.TryExcept):
             self._try_except(node)
         elif isinstance(node, ast.TryFinally):
@@ -230,6 +273,35 @@ class Unparser(object):
             ast.Sub: '-',
             ast.Mult: '*',
             ast.Div: '/',
+            ast.FloorDiv: '//',
+            ast.RShift: '>>',
+            ast.LShift: '<<',
+            ast.BitAnd: '&',
+            ast.BitOr: '|',
+            ast.BitXor: '^',
+            ast.Mod: '%',
+            ast.Pow: '**',
+        }
+        v = typemap.get(type(node), None)
+        if v is None:
+            raise SealException("无法识别的节点: ", node)
+        self._write_code(v)
+
+    def _dispatch_cmpop(self, node):
+        """
+        :type node: ast.cmpop
+        """
+        typemap = {
+            ast.Is: 'is',
+            ast.IsNot: 'is not',
+            ast.In: 'in',
+            ast.NotIn: 'not in',
+            ast.Eq: '==',
+            ast.NotEq: '!=',
+            ast.Gt: '>',
+            ast.GtE: '>=',
+            ast.Lt: '<',
+            ast.LtE: '<=',
         }
         v = typemap.get(type(node), None)
         if v is None:
@@ -248,11 +320,19 @@ class Unparser(object):
         """
         :type node: ast.ClassDef
         """
-
+        for i in node.decorator_list:
+            with self._write_line():
+                self._write_code('@')
+                self._dispatch(i)
         # 类头部输出
-        self._write_code('class ', node.name, '(')
-        bases = ', '.join((i.id for i in node.bases))
-        self._write_code(bases, '):\n')
+        with self._write_line():
+            self._write_code('class ', node.name, '(')
+            end_id = len(node.bases) - 1
+            for id_, i in enumerate(node.bases):
+                self._dispatch(i)
+                if id_ != end_id:
+                    self._write_code(', ')
+            self._write_code('):')
 
         with self._write_block():
             for i in node.body:
@@ -263,11 +343,45 @@ class Unparser(object):
         """
         :type node: ast.FunctionDef
         """
-
+        for i in node.decorator_list:
+            with self._write_line():
+                self._write_code('@')
+                self._dispatch(i)
         # 函数头部输出
-        self._write_code('def ', node.name, '(')
-        args = ', '.join((i.id for i in node.args.args))
-        self._write_code(args, '):\n')
+        with self._write_line():
+            self._write_code('def ', node.name, '(')
+            end_id = len(node.args.args) - 1
+            id_ = 0
+            if node.args.vararg is not None:
+                end_id += 1
+            if node.args.kwarg is not None:
+                end_id += 1
+
+            args = node.args.args[:len(node.args.args) - len(node.args.defaults)]
+            def_args = node.args.args[len(node.args.args) - len(node.args.defaults):]
+            for i in args:
+                self._dispatch(i)
+                if id_ != end_id:
+                    self._write_code(', ')
+                id_ += 1
+            for i, v in zip(def_args, node.args.defaults):
+                self._dispatch(i)
+                self._write_code('=')
+                self._dispatch(v)
+                if id_ != end_id:
+                    self._write_code(', ')
+                id_ += 1
+            if node.args.vararg is not None:
+                self._write_code('*', node.args.vararg)
+                if id_ != end_id:
+                    self._write_code(', ')
+                id_ += 1
+            if node.args.kwarg is not None:
+                self._write_code('**', node.args.kwarg)
+                if id_ != end_id:
+                    self._write_code(', ')
+                id_ += 1
+            self._write_code('):')
 
         with self._write_block():
             for i in node.body:
@@ -290,14 +404,25 @@ class Unparser(object):
             for i in node.body:
                 with self._write_line():
                     self._dispatch(i)
+        if len(node.orelse) > 0:
+            with self._write_line():
+                self._write_code('else:')
+            with self._write_block():
+                for i in node.orelse:
+                    with self._write_line():
+                        self._dispatch(i)
 
-    def _if(self, node):
+    def _if(self, node, is_elif=False):
         """
         :type node: ast.If
+        :type is_elif: bool
         """
 
         # 函数头部输出
-        self._write_code('if ')
+        if is_elif:
+            self._write_code('elif ')
+        else:
+            self._write_code('if ')
         self._dispatch(node.test)
         self._write_code(':\n')
 
@@ -305,6 +430,18 @@ class Unparser(object):
             for i in node.body:
                 with self._write_line():
                     self._dispatch(i)
+        if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+            node = node.orelse[0]
+            with self._write_line():
+                self._if(node, True)
+        else:
+            if len(node.orelse) > 0:
+                with self._write_line():
+                    self._write_code('else:\n')
+                with self._write_block():
+                    for i in node.orelse:
+                        with self._write_line():
+                            self._dispatch(i)
 
     def _expr(self, node):
         """
@@ -316,7 +453,8 @@ class Unparser(object):
         """
         :type node: ast.ImportFrom
         """
-        co = 'from {} import '.format(node.module, )
+
+        co = 'from {}{} import '.format(''.join(('.' for i in range(node.level))), '' if node.module is None else node.module)
         imps = (i.name if i.asname is None else '{} as {}'.format(i.name, i.asname) for i in node.names)
         imps = ', '.join(imps)
         self._write_code(co, imps)
@@ -354,13 +492,33 @@ class Unparser(object):
         """
         self._write_code('with ')
         self._dispatch(node.context_expr)
-        self._write_code(' as ')
-        self._dispatch(node.optional_vars)
+        if node.optional_vars is not None:
+            self._write_code(' as ')
+            self._dispatch(node.optional_vars)
         self._write_code(':\n')
         with self._write_block():
             for i in node.body:
                 with self._write_line():
                     self._dispatch(i)
+
+    def _while(self, node):
+        """
+        :type node: ast.While
+        """
+        self._write_code('while ')
+        self._dispatch(node.test)
+        self._write_code(':\n')
+        with self._write_block():
+            for i in node.body:
+                with self._write_line():
+                    self._dispatch(i)
+        if len(node.orelse) > 0:
+            with self._write_line():
+                self._write_code('else:')
+            with self._write_block():
+                for i in node.orelse:
+                    with self._write_line():
+                        self._dispatch(i)
 
     def _try_except(self, node):
         """
@@ -374,15 +532,30 @@ class Unparser(object):
         for i in node.handlers:
             with self._write_line():
                 self._dispatch(i)
+        if len(node.orelse) > 0:
+            with self._write_line():
+                self._write_code('else:')
+            with self._write_block():
+                for i in node.orelse:
+                    with self._write_line():
+                        self._dispatch(i)
 
     def _try_finally(self, node):
         """
         :type node: ast.TryFinally
         """
-        for i in node.body:
-            self._dispatch(i)
+        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):
+            with self._write_line():
+                self._dispatch(node.body[0])
+        else:
+            with self._write_line():
+                self._write_code('try:')
+            with self._write_block():
+                for i in node.body:
+                    with self._write_line():
+                        self._dispatch(i)
         with self._write_line():
-            self._write_code('finally:\n')
+            self._write_code('finally:')
         with self._write_block():
             for i in node.finalbody:
                 with self._write_line():
@@ -413,8 +586,11 @@ class Unparser(object):
         """
         :type node: ast.Return
         """
-        self._write_code('return ')
-        self._dispatch(node.value)
+        if node.value is None:
+            self._write_code('return')
+        else:
+            self._write_code('return ')
+            self._dispatch(node.value)
 
     def _call(self, node):
         """
@@ -422,9 +598,36 @@ class Unparser(object):
         """
         self._dispatch(node.func)
         self._write_code('(')
+        id_ = 0
+        end_id = len(node.args) + len(node.keywords) - 1
+        if node.starargs is not None:
+            end_id += 1
+        if node.kwargs is not None:
+            end_id += 1
+
         for i in node.args:
             self._dispatch(i)
-            self._write_code(', ')
+            if id_ != end_id:
+                self._write_code(', ')
+                id_ += 1
+        for i in node.keywords:
+            self._write_code(i.arg, '=')
+            self._dispatch(i.value)
+            if id_ != end_id:
+                self._write_code(', ')
+                id_ += 1
+        if node.starargs is not None:
+            self._write_code('*')
+            self._dispatch(node.starargs)
+            if id_ != end_id:
+                self._write_code(', ')
+                id_ += 1
+        if node.kwargs is not None:
+            self._write_code('**')
+            self._dispatch(node.kwargs)
+            if id_ != end_id:
+                self._write_code(', ')
+                id_ += 1
         self._write_code(')')
 
     def _attribute(self, node):
@@ -459,20 +662,29 @@ class Unparser(object):
         :type node: ast.UnaryOp
         """
         self._dispatch(node.op)
+        self._write_code(' ')
         self._dispatch(node.operand)
 
     def _bool_op(self, node):
         """
         :type node: ast.BoolOp
         """
-        end_id = len(node.values) - 1
         for id_, i in enumerate(node.values):
-            self._dispatch(i)
-            if id_ != end_id:
+            if id_ != 0:
                 self._write_code(' ')
                 self._dispatch(node.op)
                 self._write_code(' ')
+            self._dispatch(i)
+
+    def _bin_op(self, node):
+        """
+        :type node: ast.BinOp
+        """
+        self._dispatch(node.left)
+        self._write_code(' ')
         self._dispatch(node.op)
+        self._write_code(' ')
+        self._dispatch(node.right)
 
     def _set(self, node):
         """
@@ -491,7 +703,7 @@ class Unparser(object):
         """
         self._write_code('{')
         if len(node.keys) > 0:
-            for k, v in zip(node.keys, node.value):
+            for k, v in zip(node.keys, node.values):
                 self._dispatch(k)
                 self._write_code(': ')
                 self._dispatch(v)
@@ -520,17 +732,76 @@ class Unparser(object):
                 self._write_code(', ')
         self._write_code(')')
 
+    def _dict_comp(self, node):
+        """
+        :type node: ast.DictComp
+        """
+        self._write_code('{')
+        self._dispatch(node.key)
+        self._write_code(': ')
+        self._dispatch(node.value)
+        for i in node.generators:
+            self._write_code(' ')
+            self._dispatch(i)
+        self._write_code('}')
+
+    def _set_comp(self, node):
+        """
+        :type node: ast.SetComp
+        """
+        self._write_code('{')
+        self._dispatch(node.elt)
+        for i in node.generators:
+            self._write_code(' ')
+            self._dispatch(i)
+        self._write_code('}')
+
+    def _list_comp(self, node):
+        """
+        :type node: ast.ListComp
+        """
+        self._write_code('[')
+        self._dispatch(node.elt)
+        for i in node.generators:
+            self._write_code(' ')
+            self._dispatch(i)
+        self._write_code(']')
+
+    def _generator_exp(self, node):
+        """
+        :type node: ast.GeneratorExp
+        """
+        self._write_code('(')
+        self._dispatch(node.elt)
+        for i in node.generators:
+            self._write_code(' ')
+            self._dispatch(i)
+        self._write_code(')')
+
+    def _comprehension(self, node):
+        """
+        :type node: ast.comprehension
+        """
+        self._write_code('for ')
+        self._dispatch(node.target)
+        self._write_code(' in ')
+        self._dispatch(node.iter)
+        for i in node.ifs:
+            self._write_code(' if ')
+            self._dispatch(i)
+
     def _str(self, node):
         """
         :type node: ast.Str
         """
-        co = _repr(node.s)
-        if co[0] == 'b' or co[0] == 'u':
-            co = co[1:]
-        if isinstance(co, bytes):
-            self._write_code('b', co)
-        else:
-            self._write_code('u', co)
+        self._write_code(repr(node.s))
+        # co = _repr(node.s)
+        # if co[0] == 'b' or co[0] == 'u':
+        #     co = co[1:]
+        # if isinstance(co, bytes):
+        #     self._write_code('b', co)
+        # else:
+        #     self._write_code('u', co)
 
     def _num(self, node):
         """
@@ -543,23 +814,6 @@ class Unparser(object):
         :type node: ast.Name
         """
         self._write_code(node.id)
-
-    def _cmpop(self, node):
-        """
-        :type node: ast.cmpop
-        """
-        typemap = {
-            ast.Is: 'is',
-            ast.IsNot: 'is not',
-            ast.In: 'in',
-            ast.NotIn: 'not in',
-            ast.Eq: '==',
-            ast.NotEq: '!=',
-        }
-        v = typemap.get(type(node), None)
-        if v is None:
-            raise SealException("无法识别的节点: ", node)
-        self._write_code(' ', v, ' ')
 
 
 def parser(code):
