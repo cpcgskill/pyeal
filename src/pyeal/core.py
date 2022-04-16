@@ -161,12 +161,11 @@ class EncapsulationBuilder(BuilderBase):
                     "import sys",
                     'sys.modules[{0}].{1} = sys.modules[{2}]'.format(repr(self.seal_name()),
                                                                      m_split[0],
-                                                                     repr("{}.{}".format(self.seal_name(), m_split[0]))),
+                                                                     repr(
+                                                                         "{}.{}".format(self.seal_name(), m_split[0]))),
                 ]
                 for i in reversed(ast.parse("\n".join(head_code)).body):
                     node.body.insert(0, i)
-
-
 
         replace_node(node, ast.Import, key=lambda n: self.compile_import_node(n, m))
         replace_node(node, ast.ImportFrom, key=lambda n: self.compile_import_from_node(n, m))

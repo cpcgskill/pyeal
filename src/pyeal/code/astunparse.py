@@ -75,7 +75,6 @@ class Unparser(object):
         elif isinstance(node, ast.cmpop):
             self._dispatch_cmpop(node)
 
-
         elif isinstance(node, ast.mod):
             self._dispatch_mod(node)
 

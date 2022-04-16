@@ -16,6 +16,7 @@ from abc import abstractmethod as a, get_cache_token as g
 
 from pyeal.exc import *
 
+
 def undo_block(fn):
     @functools.wraps(fn)
     def _(*args, **kwargs):
@@ -27,9 +28,12 @@ def undo_block(fn):
 
     return _
 
+
 def test(a, b=0, c=1, *args, **kwargs):
     pass
-test(0, 1, *[3, 4, 5], c=3, **{a:'s'})
+
+
+test(0, 1, *[3, 4, 5], c=3, **{a: 's'})
 
 if r is not None and self.dir and 1 or 2 in r:
     rs = r.split(self.sep())
@@ -122,6 +126,8 @@ raise IndexError("error")
 s = lambda x, y=1, *args, **kwargs: 0
 print ", e"
 del s,
+
+
 @abstractmethod
 class BaseRes(object):
     t = 1
