@@ -177,6 +177,8 @@ class Unparser(object):
             self._num(node)
         elif isinstance(node, ast.Name):
             self._name(node)
+        elif isinstance(node, ast.Lambda):
+            self._lambda(node)
 
         else:
             raise SealException("无法识别的节点: ", node)
@@ -211,10 +213,25 @@ class Unparser(object):
             if node.msg is not None:
                 self._write_code(', ')
                 self._dispatch(node.msg)
+        elif isinstance(node, ast.Print):
+            self._write_code('print ')
+            for id_, i in enumerate(node.values):
+                if id_ != 0:
+                    self._write_code(', ')
+                self._dispatch(i)
+        elif isinstance(node, ast.Delete):
+            self._write_code('del ')
+            for id_, i in enumerate(node.targets):
+                if id_ != 0:
+                    self._write_code(', ')
+                self._dispatch(i)
+
         elif isinstance(node, ast.Global):
             self._write_code('global ', ', '.join(node.names))
         elif isinstance(node, ast.Continue):
             self._write_code('continue')
+        elif isinstance(node, ast.Break):
+            self._write_code('break')
 
         elif isinstance(node, ast.AugAssign):
             self._dispatch(node.target)
@@ -454,7 +471,8 @@ class Unparser(object):
         :type node: ast.ImportFrom
         """
 
-        co = 'from {}{} import '.format(''.join(('.' for i in range(node.level))), '' if node.module is None else node.module)
+        co = 'from {}{} import '.format(''.join(('.' for i in range(node.level))),
+                                        '' if node.module is None else node.module)
         imps = (i.name if i.asname is None else '{} as {}'.format(i.name, i.asname) for i in node.names)
         imps = ', '.join(imps)
         self._write_code(co, imps)
@@ -814,6 +832,46 @@ class Unparser(object):
         :type node: ast.Name
         """
         self._write_code(node.id)
+
+    def _lambda(self, node):
+        """
+        :type node: ast.Lambda
+        """
+        self._write_code('lambda ')
+        end_id = len(node.args.args) - 1
+        id_ = 0
+        if node.args.vararg is not None:
+            end_id += 1
+        if node.args.kwarg is not None:
+            end_id += 1
+
+        args = node.args.args[:len(node.args.args) - len(node.args.defaults)]
+        def_args = node.args.args[len(node.args.args) - len(node.args.defaults):]
+        for i in args:
+            self._dispatch(i)
+            if id_ != end_id:
+                self._write_code(', ')
+            id_ += 1
+        for i, v in zip(def_args, node.args.defaults):
+            self._dispatch(i)
+            self._write_code('=')
+            self._dispatch(v)
+            if id_ != end_id:
+                self._write_code(', ')
+            id_ += 1
+        if node.args.vararg is not None:
+            self._write_code('*', node.args.vararg)
+            if id_ != end_id:
+                self._write_code(', ')
+            id_ += 1
+        if node.args.kwarg is not None:
+            self._write_code('**', node.args.kwarg)
+            if id_ != end_id:
+                self._write_code(', ')
+            id_ += 1
+        self._write_code(':')
+
+        self._dispatch(node.body)
 
 
 def parser(code):

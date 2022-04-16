@@ -9,7 +9,7 @@ u"""
 :bilibili: https://space.bilibili.com/351598127
 
 """
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 from . import os, sys as s
 import os as o, sys as s
 from abc import abstractmethod as a, get_cache_token as g
@@ -119,6 +119,9 @@ raise
 raise IndexError
 raise IndexError("error")
 
+s = lambda x, y=1, *args, **kwargs: 0
+print ", e"
+del s,
 @abstractmethod
 class BaseRes(object):
     t = 1
@@ -296,7 +299,7 @@ class MergeRes(BaseRes):
 
 if __name__ == "__main__":
     for i in LocalRes(r"D:\backup_to_cloud\dev\python_for_maya\package\seal").walk():
-        print(i, *(0, 1), sep="-")
+        test(i, *(0, 1), sep="-")
 import cpmel.cmds as cc
 from rig_lib.ctx import Ctx
 from rig_lib.joint_tree import create_real_joints_from_root
