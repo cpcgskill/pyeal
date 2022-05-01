@@ -18,42 +18,11 @@ import ast
 import os
 import locale
 
-import astunparse
-# import pyeal.code.astunparse as astunparse
+from pyeal.code.core import Code
 
 from pyeal.res import BaseRes
 
 from pyeal.module_data import ModuleData
-
-
-def replace_node(rn, t, key):
-    if hasattr(rn, "body"):
-        if isinstance(rn.body, list):
-            body = []
-            for n in rn.body:
-                if isinstance(n, t):
-                    body.append(key(n))
-                else:
-                    body.append([n])
-            rn.body = [ii for i in body for ii in i]
-            for n in rn.body:
-                replace_node(n, t, key)
-
-
-def delete_node(rn, key):
-    deleted_nodes = []
-    if hasattr(rn, "body"):
-        if isinstance(rn.body, list):
-            body = []
-            for n in rn.body:
-                if key(n):
-                    deleted_nodes.append(n)
-                else:
-                    body.append(n)
-            rn.body = body
-            for n in rn.body:
-                deleted_nodes.extend(delete_node(n, key))
-    return deleted_nodes
 
 
 class BuilderBase(object):
@@ -73,7 +42,7 @@ class BuilderBase(object):
 class EncapsulationBuilder(BuilderBase):
     """打包编译器"""
 
-    def __init__(self, source, target, name, code):
+    def __init__(self, source, target, name, code, imp_name=None):
         """
         :type source: BaseRes
         :type target: BaseRes
@@ -82,8 +51,12 @@ class EncapsulationBuilder(BuilderBase):
         super(EncapsulationBuilder, self).__init__(source, target)
         self.name = name
         self.code = code
+        if imp_name is None:
+            self.imp_name = name
+        else:
+            self.imp_name = imp_name
         self.module_data = ModuleData(self.source)
-        self.uid = uuid.uuid4().hex[0:2]
+        self.uid = uuid.uuid4().hex[0:4]
 
     def seal_name(self):
         return "{}_{}".format(self.name, self.uid)
@@ -151,8 +124,7 @@ class EncapsulationBuilder(BuilderBase):
         :return:
         """
         # print("compile_module: ", m)
-
-        node = ast.parse(code)
+        code_editor = Code(code)
 
         if m is not None:
             m_split = m.split('.')
@@ -164,16 +136,21 @@ class EncapsulationBuilder(BuilderBase):
                                                                      repr(
                                                                          "{}.{}".format(self.seal_name(), m_split[0]))),
                 ]
-                for i in reversed(ast.parse("\n".join(head_code)).body):
-                    node.body.insert(0, i)
+                code_editor.insert_to_head(ast.parse("\n".join(head_code)).body)
 
-        replace_node(node, ast.Import, key=lambda n: self.compile_import_node(n, m))
-        replace_node(node, ast.ImportFrom, key=lambda n: self.compile_import_from_node(n, m))
-        deleted_future = delete_node(node, key=self.delete_future)
-        for i in reversed(deleted_future):
-            node.body.insert(0, i)
+        code_editor.replace_node(
+            check_key=lambda n: isinstance(n, ast.Import),
+            key=lambda n: self.compile_import_node(n, m)
+        ).replace_node(
+            check_key=lambda n: isinstance(n, ast.ImportFrom),
+            key=lambda n: self.compile_import_from_node(n, m)
+        )
 
-        code = astunparse.unparse(node)
+        deleted_future = code_editor.delete_node(key=self.delete_future)
+
+        code_editor.insert_to_head(deleted_future)
+
+        code = code_editor.unparse()
 
         return code.encode("utf-8")
 
@@ -187,7 +164,7 @@ class EncapsulationBuilder(BuilderBase):
         if not "__init__" in self.module_data.lib_names():
             self.target.write(self.target_path("__init__.py"), b"")
         code = self.compile_module(self.code, None)
-        self.target.write(self.name + ".py", code)
+        self.target.write(self.imp_name + ".py", code)
         # compiled = set()
         # for m, f in self.module_data.module_name_and_paths():
         #     if f in compiled:

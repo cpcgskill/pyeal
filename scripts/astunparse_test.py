@@ -10,7 +10,7 @@ u"""
 
 """
 from __future__ import unicode_literals, print_function, division
-import pyeal.code.astunparse as astunparse
+import pyeal.code.unparse as astunparse
 
 with open('./astunparse_test_file.py', 'rb') as f:
     test_code = f.read()

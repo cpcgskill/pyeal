@@ -75,7 +75,7 @@ def target_is_maya_plugin(config):
 
     exec_script = config.get_script()
 
-    EncapsulationBuilder(MergeRes(src, lib), m0, config.name, exec_script).build()
+    EncapsulationBuilder(MergeRes(src, lib), m0, config.name, exec_script, config.get('imp_name', config.name)).build()
     InstallBuilder(m0, dist, log=log, ann=annotation, name=config.name).build()
 
 
@@ -87,7 +87,7 @@ def target_is_exec(config):
 
     exec_script = config.get_script()
 
-    EncapsulationBuilder(MergeRes(src, lib), build, config.name, exec_script).build()
+    EncapsulationBuilder(MergeRes(src, lib), build, config.name, exec_script, config.get('imp_name', config.name)).build()
 
 
 target_types = {
