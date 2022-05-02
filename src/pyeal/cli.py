@@ -25,26 +25,29 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 class Config(object):
     def __init__(self, root):
         root = os.path.abspath(root)
-        self.root = root
-        self.root_res = LocalRes(root)
-        config = json.loads(self.root_res.read_string("pyeal.json"))
+        self.root = LocalRes(root)
+        config = json.loads(self.root.read_string("pyeal.json"))
         self.config = config
 
         self.type = config["type"]
-        self.src = self.root_res.sep().join((root, 'src'))
-        self.lib = self.root_res.sep().join((root, 'lib'))
-        self.build = self.root_res.sep().join((root, 'build'))
+
+        self.src = LocalRes(os.sep.join((root, 'src')))
+        self.lib = LocalRes(os.sep.join((root, 'lib')))
+        self.build = LocalRes(os.sep.join((root, 'build')))
+        self.middle = LocalRes(os.sep.join((root, 'build', 'middle')))
+        self.out = LocalRes(os.sep.join((root, 'build', 'out')))
+
         self.name = config["name"]
 
     def get_script(self):
         script = self.config.get("exec_script", None)
         if script is None:
             index_module = self.config.get("index_module", "index.py")
-            script = self.root_res.read(index_module)
+            script = self.root.read(index_module)
         return script
 
     def get_icon(self):
-        return self.root_res.read('icon.ico')
+        return self.root.read('icon.ico')
 
     def get(self, key, default=None):
         return self.config.get(key, default)
@@ -55,39 +58,42 @@ class Config(object):
             raise ConfigException("需要名为<{}>的配置项".format(key))
         return c
 
-    def __str__(self):
-        return """{}<{}:type={}, src={}, build={}>""".format(self.__class__.__name__,
-                                                             self.name,
-                                                             self.type,
-                                                             self.src,
-                                                             self.build)
+    # def __str__(self):
+    #     return """{}<{}:type={}, src={}, build={}>""".format(self.__class__.__name__,
+    #                                                          self.name,
+    #                                                          self.type,
+    #                                                          self.src,
+    #                                                          self.build)
 
 
 def target_is_maya_plugin(config):
-    root = LocalRes(config.root)
-    src = LocalRes(config.src)
-    lib = LocalRes(config.lib)
-    build = LocalRes(config.build)
-    m0 = DirectoryRes(build, "m0")
-    dist = DirectoryRes(build, "dist")
-    log = config.get_icon()
-    annotation = config.get("annotation", "这个插件作者很懒没有写注释哦~")
+    m0 = DirectoryRes(config.middle, "m0")
 
-    exec_script = config.get_script()
+    EncapsulationBuilder(
+        MergeRes(config.src, config.lib),
+        m0,
+        config.name,
+        config.get_script(),
+        config.get('imp_name', config.name)
+    ).build()
 
-    EncapsulationBuilder(MergeRes(src, lib), m0, config.name, exec_script, config.get('imp_name', config.name)).build()
-    InstallBuilder(m0, dist, log=log, ann=annotation, name=config.name).build()
+    InstallBuilder(
+        m0,
+        config.out,
+        log=config.get_icon(),
+        ann=config.get("annotation", "这个插件作者很懒没有写注释哦~"),
+        name=config.get('imp_name', config.name),
+    ).build()
 
 
 def target_is_exec(config):
-    root = LocalRes(config.root)
-    src = LocalRes(config.src)
-    lib = LocalRes(config.lib)
-    build = LocalRes(config.build)
-
-    exec_script = config.get_script()
-
-    EncapsulationBuilder(MergeRes(src, lib), build, config.name, exec_script, config.get('imp_name', config.name)).build()
+    EncapsulationBuilder(
+        MergeRes(config.src, config.lib),
+        config.out,
+        config.name,
+        config.get_script(),
+        config.get('imp_name', config.name),
+    ).build()
 
 
 target_types = {
@@ -99,8 +105,7 @@ target_types = {
 def cmd_build(root):
     config = Config(root)
 
-    build = LocalRes(config.build)
-    build.clean()
+    config.build.clean()
 
     target_type_func = target_types.get(config.type)
     if target_type_func is None:
