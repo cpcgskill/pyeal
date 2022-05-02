@@ -58,14 +58,6 @@ class Config(object):
             raise ConfigException("需要名为<{}>的配置项".format(key))
         return c
 
-    # def __str__(self):
-    #     return """{}<{}:type={}, src={}, build={}>""".format(self.__class__.__name__,
-    #                                                          self.name,
-    #                                                          self.type,
-    #                                                          self.src,
-    #                                                          self.build)
-
-
 def target_is_maya_plugin(config):
     m0 = DirectoryRes(config.middle, "m0")
 
