@@ -58,6 +58,17 @@ class Config(object):
             raise ConfigException("需要名为<{}>的配置项".format(key))
         return c
 
+
+def target_is_exec(config):
+    EncapsulationBuilder(
+        MergeRes(config.src, config.lib),
+        config.out,
+        config.name,
+        config.get_script(),
+        config.get('imp_name', config.name),
+    ).build()
+
+
 def target_is_maya_plugin(config):
     m0 = DirectoryRes(config.middle, "m0")
 
@@ -78,10 +89,16 @@ def target_is_maya_plugin(config):
     ).build()
 
 
-def target_is_exec(config):
+def target_is_template(config):
+    template = DirectoryRes(config.root, 'template')
+    template_output = DirectoryRes(config.out, config.ass('template-output'))
+
+    for f in template.files():
+        config.out.write(f, template.read(f))
+
     EncapsulationBuilder(
         MergeRes(config.src, config.lib),
-        config.out,
+        template_output,
         config.name,
         config.get_script(),
         config.get('imp_name', config.name),
@@ -89,8 +106,9 @@ def target_is_exec(config):
 
 
 target_types = {
-    "package": target_is_exec,
-    "maya-plugin": target_is_maya_plugin,
+    'package': target_is_exec,
+    'maya-plugin': target_is_maya_plugin,
+    'template': target_is_template,
 }
 
 
