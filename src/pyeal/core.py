@@ -62,10 +62,14 @@ class EncapsulationBuilder(BuilderBase):
         return "{}_{}".format(self.name, self.uid)
 
     def target_name(self, p):
-        return "{}.{}".format(self.seal_name(), p)
+        return "{}_{}".format(self.seal_name(), p)
 
     def target_path(self, p):
-        return "{}/{}".format(self.seal_name(), p)
+        if len(p.split(self.source.sep())) == 1 and \
+                p.split('.')[-1] != 'py':
+            return p
+        else:
+            return "{}_{}".format(self.seal_name(), p)
 
     def compile_import_node(self, n, m):
         alias_list = []
@@ -126,17 +130,17 @@ class EncapsulationBuilder(BuilderBase):
         # print("compile_module: ", m)
         code_editor = Code(code)
 
-        if m is not None:
-            m_split = m.split('.')
-            if (len(m_split) == 2 and m_split[1] == "__init__") or len(m_split) <= 1:
-                head_code = [
-                    "import sys",
-                    'sys.modules[{0}].{1} = sys.modules[{2}]'.format(repr(self.seal_name()),
-                                                                     m_split[0],
-                                                                     repr(
-                                                                         "{}.{}".format(self.seal_name(), m_split[0]))),
-                ]
-                code_editor.insert_to_head(ast.parse("\n".join(head_code)).body)
+        # if m is not None:
+        #     m_split = m.split('.')
+        #     if (len(m_split) == 2 and m_split[1] == "__init__") or len(m_split) <= 1:
+        #         head_code = [
+        #             "import sys",
+        #             'sys.modules[{0}].{1} = sys.modules[{2}]'.format(repr(self.seal_name()),
+        #                                                              m_split[0],
+        #                                                              repr(
+        #                                                                  "{}.{}".format(self.seal_name(), m_split[0]))),
+        #         ]
+        #         code_editor.insert_to_head(ast.parse("\n".join(head_code)).body)
 
         code_editor.replace_node(
             check_key=lambda n: isinstance(n, ast.Import),
