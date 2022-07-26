@@ -3,12 +3,13 @@
 from __future__ import unicode_literals, print_function
 import setuptools
 
+version = '0.2.0'
 with open("README.md", "rb") as f:
     long_description = f.read().decode(encoding="utf-8")
 
 setuptools.setup(
     name="pyeal",
-    version="0.1.5",
+    version=version,
     author="cpcgskill",
     author_email="cpcgskill@outlook.com",
     description="Python 打包编译工具",
