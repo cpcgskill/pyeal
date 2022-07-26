@@ -127,20 +127,7 @@ class EncapsulationBuilder(BuilderBase):
         :type m: unicode|None
         :return:
         """
-        # print("compile_module: ", m)
         code_editor = Code(code)
-
-        # if m is not None:
-        #     m_split = m.split('.')
-        #     if (len(m_split) == 2 and m_split[1] == "__init__") or len(m_split) <= 1:
-        #         head_code = [
-        #             "import sys",
-        #             'sys.modules[{0}].{1} = sys.modules[{2}]'.format(repr(self.seal_name()),
-        #                                                              m_split[0],
-        #                                                              repr(
-        #                                                                  "{}.{}".format(self.seal_name(), m_split[0]))),
-        #         ]
-        #         code_editor.insert_to_head(ast.parse("\n".join(head_code)).body)
 
         code_editor.replace_node(
             check_key=lambda n: isinstance(n, ast.Import),
@@ -165,23 +152,8 @@ class EncapsulationBuilder(BuilderBase):
             code = self.source.read(f)
             code = self.compile_module(code, m)
             self.target.write(self.target_path(f), code)
-        if not "__init__" in self.module_data.lib_names():
-            self.target.write(self.target_path("__init__.py"), b"")
         code = self.compile_module(self.code, None)
         self.target.write(self.imp_name + ".py", code)
-        # compiled = set()
-        # for m, f in self.module_data.module_name_and_paths():
-        #     if f in compiled:
-        #         continue
-        #     compiled.add(f)
-        #     code = self.source.read(f)
-        #     code = self.compile_module(code, m)
-        #     self.target.write(self.target_path(f), code)
-        # code = self.compile_module(self.code, None)
-        # self.target.write(self.exec_file_name, code)
-        # for f in self.source.files():
-        #     if not f in compiled:
-        #         self.target.write(f, self.source.read(f))
 
 
 class InstallBuilder(BuilderBase):
