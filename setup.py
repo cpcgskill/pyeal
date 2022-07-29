@@ -3,7 +3,7 @@
 from __future__ import unicode_literals, print_function
 import setuptools
 
-version = '0.2.0'
+version = '0.2.1'
 with open("README.md", "rb") as f:
     long_description = f.read().decode(encoding="utf-8")
 
@@ -34,9 +34,9 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     package_dir={"": "src"},
-    # 不使用自动搜索
+    # # 使用自动搜索
     # packages=setuptools.find_packages(where="src"),
-    packages=["pyeal"],
+    packages=['pyeal', 'pyeal.code'],
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*",
     # 指定依赖
     install_requires=[
