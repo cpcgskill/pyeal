@@ -12,13 +12,27 @@
 
 ### 快速开始
 
-注意下方的python是你的Python, 正常情况下可以直接通过python调用, 而Maya的python一般是C:\Program Files\Autodesk\Maya2018\bin\mayapy.exe
+注意下方的python是你的Python, 正常情况下可以直接通过python调用, 而Maya的python一般是C:\Program
+Files\Autodesk\Maya2018\bin\mayapy.exe
 
 #### 安装
 
 ```commandline
 python -m pip install pyeal
 ```
+
+##### 如果你使用mayapy进行安装请注意以下几点:
+
+1. 请确认pip给你安装的位置是否在python的搜索路径下，
+   如果不存在可以在“pip install”后加“-t 目标路径” 来解决这个问题.
+2. 请确认pyeal.exe可以被命令行查找到，它一般在pip给你安装的库的位置的../../Scripts下.
+   如果无法被找到请将其所在的目录添加到环境变量中.
+3. 如果出现第一次安装pyeal不会出现以上情况，而第二次出现或者反过来.请按情况处理即可，
+   这只是python2、python3、maya、windows其中一个出现了未知的变化而已导致的更改而已.
+4. 建议打开管理员进行安装否则会安装到
+   “C:\Users\PC\AppData\Roaming\Python\Python27\site-packages”下，
+   这将导致库文件和普通的python2混合在一起.
+5. 如果出现了不在上述情况中的错误请提issue
 
 #### 初始化
 
@@ -36,7 +50,7 @@ python -m pyeal build
 
 ### 功能介绍
 
-目前大部分操作都通过命令行调用， 依赖于config.json配置功能。
+目前大部分操作都通过命令行调用， 依赖于config.json配置功能.
 
 #### 配置
 
@@ -58,7 +72,7 @@ python -m pyeal build
 
 * icon.ico 在构建类型为maya-plugin或其他需要图标的编译类型的时候需要的文件
 * pyeal.json 构建配置文件
-* index.py 在编写复杂的启动脚本时，替代exec_script配置项的文件。
+* index.py 在编写复杂的启动脚本时，替代exec_script配置项的文件.
 * src/ 源代码目录
 * lib/ 依赖库目录
 * build/ 输出目录
