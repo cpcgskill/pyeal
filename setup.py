@@ -3,7 +3,7 @@
 from __future__ import unicode_literals, print_function
 import setuptools
 
-version = '0.3.1'
+version = '0.4.0'
 with open("README.md", "rb") as f:
     long_description = f.read().decode(encoding="utf-8")
 

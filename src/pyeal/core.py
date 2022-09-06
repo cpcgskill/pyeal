@@ -158,7 +158,7 @@ class EncapsulationBuilder(BuilderBase):
 
 class InstallBuilder(BuilderBase):
     PATH = os.path.dirname(os.path.abspath(__file__))
-    with open(os.sep.join((PATH, "mel_template_lib.mel")), "rb") as f:
+    with open(os.sep.join((PATH, 'assets', "mel_template_lib.mel")), "rb") as f:
         mel_template_lib_code = f.read().decode("utf-8")
     mel_template = r'''startInstall(
     "exec(compile(open(plugin_path+" + <<exec_file_name>> + ",'rb').read(), plugin_path+" + <<exec_file_name>> + ", 'exec'), globals(), locals())", 

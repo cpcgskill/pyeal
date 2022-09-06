@@ -46,14 +46,25 @@ class Config(object):
         self.middle = LocalRes(self.middle_path)
         self.out = LocalRes(self.out_path)
 
-        self.config = json.loads(self.root.read_string("pyeal.json"))
-        self.type = self.config["type"]
-        self.name = self.config["name"]
+    def get_config(self):
+        return json.loads(self.root.read_string("pyeal.json"))
+
+    @property
+    def config_data(self):
+        return self.get_config()
+
+    @property
+    def type(self):
+        return self.config_data["type"]
+
+    @property
+    def name(self):
+        return self.config_data["name"]
 
     def get_script(self):
-        script = self.config.get("exec_script", None)
+        script = self.config_data.get("exec_script", None)
         if script is None:
-            index_module = self.config.get("index_module", "index.py")
+            index_module = self.config_data.get("index_module", "index.py")
             script = self.root.read(index_module)
         return script
 
@@ -61,7 +72,7 @@ class Config(object):
         return self.root.read('icon.ico')
 
     def get(self, key, default=None):
-        return self.config.get(key, default)
+        return self.config_data.get(key, default)
 
     def ass(self, key):
         c = self.get(key, None)
@@ -176,29 +187,45 @@ def cmd_build(config, *args):
 
 
 config_templates = {
+    "package": OrderedDict([
+        ("type", "package"),
+        ("exec_script", ""),
+    ]),
     "maya-plugin": OrderedDict([
         ("type", "maya-plugin"),
-        ("source", "src"),
-        ("target", "build"),
-        ("name", "your-name"),
-        ("exec_script", "your-script"),
-    ])
+        ("exec_script", ""),
+    ]),
 }
 
 
-def cmd_init(config):
+def cmd_init(config, template_name=None, package_name=None):
     """
     :type config: Config
+    :type template_name: AnyStr
+    :type package_name: AnyStr
     """
-    config.root.write_string("pyeal.json", json.dumps(config_templates["maya-plugin"], indent=2).encode("utf-8"))
-    with open(os.sep.join((PATH, "log.ico")), "rb") as f:
-        config.root.write("log.ico", f.read())
+    if template_name is None:
+        template_name = 'package'
+
+    template = config_templates[template_name]
+
+    if package_name is None:
+        template['name'] = 'your_name'
+    else:
+        template['name'] = package_name
+
+    config.root.write_string("pyeal.json", json.dumps(template, indent=2).encode("utf-8"))
+
     src = os.sep.join((config.root_path, "src"))
     if not os.path.isdir(src):
         os.makedirs(src)
     build = os.sep.join((config.root_path, "build"))
     if not os.path.isdir(build):
         os.makedirs(build)
+
+    if template_name == 'maya-plugin':
+        with open(os.sep.join((PATH, 'assets', "icon.ico")), "rb") as f:
+            config.root.write("icon.ico", f.read())
 
 
 def cmd_clean(config):
