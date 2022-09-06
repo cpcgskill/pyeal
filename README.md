@@ -57,13 +57,14 @@ python -m pyeal build
 ```json
 {
   "type": "package",
-  "name": "your plugin name"
+  "name": "your_name",
+  "exec_script": ""
 }
 ```
 
 ##### 配置的各项参数
 
-* type: 你要封装的类型目前仅支持MayaPlugin
+* type: 你要封装的类型目前仅支持package, maya-plugin
 * name： 你要封装的名称，一般作为名称空间或者名称前缀
 * exec_script： 启动脚本， 一般是导入某一个模块，然后执行启动函数
 * annotation： 注释
