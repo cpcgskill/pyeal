@@ -17,7 +17,7 @@ from unittest import TestCase, FunctionTestCase
 class MyTestCase(TestCase):
     def test_walk(self):
         from pyeal.res import LocalRes
-        data = LocalRes(r"./../../test/").walk('test1')
+        data = LocalRes(r"./../../test/test1/").walk()
         self.assertTrue(type(data) == list, 'type check error')
         self.assertTrue(type(data[0]) == tuple, 'type check')
         for i in data:

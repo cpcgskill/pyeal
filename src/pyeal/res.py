@@ -207,7 +207,7 @@ class BaseRes(object):
         """
         for f in self.files(path):
             self.customize_remove(f)
-        for d in self.dirs(path):
+        for d in reversed(self.dirs(path)):
             self.customize_remove_dir(d)
         return self
 
@@ -361,6 +361,4 @@ class MergeRes(BaseRes):
         return any((i.is_file(i.to_customize_sep(path)) for i in self.res))
 
     def customize_walk(self):
-        for i in zip(*(i.walk() for i in self.res)):
-            for t in i:
-                yield t
+        return [t for i in self.res for t in i.walk()]
