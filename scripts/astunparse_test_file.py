@@ -35,9 +35,9 @@ def test(a, b=0, c=1, *args, **kwargs):
 
 test(0, 1, *[3, 4, 5], c=3, **{a: 's'})
 
-if r is not None and self.dir and 1 or 2 in r:
+if r is not None and self.dirs and 1 or 2 in r:
     rs = r.split(self.sep())
-    if self.dir == rs[0]:
+    if self.dirs == rs[0]:
         r = self.sep().join(rs[1:])
         yield None if r == "" else r, fs
 

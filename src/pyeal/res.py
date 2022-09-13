@@ -249,7 +249,7 @@ class LocalRes(BaseRes):
 
     def customize_remove_dir(self, path):
         path = os.sep.join((self.root, path))
-        os.removedirs(path)
+        os.rmdir(path)
 
     def customize_sep(self):
         return os.sep
