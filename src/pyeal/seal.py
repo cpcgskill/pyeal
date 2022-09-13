@@ -1,45 +1,28 @@
 # -*-coding:utf-8 -*-
-u"""
-:创建时间: 2021/12/19 10:44
+"""
+:创建时间: 2022/9/13 13:32
 :作者: 苍之幻灵
 :我的主页: https://cpcgskill.com
+:Github: https://github.com/cpcgskill
 :QQ: 2921251087
-:爱发电: https://afdian.net/@Phantom_of_the_Cang
 :aboutcg: https://www.aboutcg.org/teacher/54335
 :bilibili: https://space.bilibili.com/351598127
+:爱发电: https://afdian.net/@Phantom_of_the_Cang
 
 """
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, division
 import uuid
-from abc import abstractmethod
-
 import ast
-import os
-import locale
 
-from pyeal.code.core import Code
-
+from pyeal.codekit.core import Code
 from pyeal.res import BaseRes
-
 from pyeal.module_data import ModuleData
 
-
-class BuilderBase(object):
-    def __init__(self, source, target):
-        """
-        :type source: BaseRes
-        :type target: BaseRes
-        """
-        self.source = source
-        self.target = target
-
-    @abstractmethod
-    def build(self):
-        pass
+if False:
+    from typing import List, Tuple, Dict, AnyStr, Any
 
 
-class EncapsulationBuilder(BuilderBase):
+class Sealer(object):
     """打包编译器"""
 
     def __init__(self, source, target, name, code, imp_name=None):
@@ -48,7 +31,8 @@ class EncapsulationBuilder(BuilderBase):
         :type target: BaseRes
         :type name: unicode
         """
-        super(EncapsulationBuilder, self).__init__(source, target)
+        self.source = source
+        self.target = target
         self.name = name
         self.code = code
         if imp_name is None:
@@ -65,7 +49,7 @@ class EncapsulationBuilder(BuilderBase):
         return "{}_{}".format(self.seal_name(), p)
 
     def target_path(self, p):
-        if len(p.split(self.source.sep())) == 1 and \
+        if len(p.split('/')) == 1 and \
                 p.split('.')[-1] != 'py':
             return p
         else:
@@ -121,10 +105,10 @@ class EncapsulationBuilder(BuilderBase):
                     return True
         return False
 
-    def compile_module(self, code, m):
+    def compile_module(self, code, m=None):
         """
         :type code: bytes
-        :type m: unicode|None
+        :type m: AnyStr or None
         :return:
         """
         code_editor = Code(code)
@@ -156,51 +140,12 @@ class EncapsulationBuilder(BuilderBase):
         self.target.write(self.imp_name + ".py", code)
 
 
-class InstallBuilder(BuilderBase):
-    PATH = os.path.dirname(os.path.abspath(__file__))
-    with open(os.sep.join((PATH, 'assets', "mel_template_lib.mel")), "rb") as f:
-        mel_template_lib_code = f.read().decode("utf-8")
-    mel_template = r'''startInstall(
-    "exec(compile(open(plugin_path+" + <<exec_file_name>> + ",'rb').read(), plugin_path+" + <<exec_file_name>> + ", 'exec'), globals(), locals())", 
-    <<ann>>, 
-    "dist/log.ico", 
-    <<plugin_path>>
-    );'''
-
-    def __init__(self, source, target, log, ann, name, install_mel_name="install.mel", exec_file_name="exec.py"):
-        super(InstallBuilder, self).__init__(source, target)
-        self.install_mel_name = install_mel_name
-        self.exec_file_name = exec_file_name
-        self.log = log
-        self.ann = ann
-        self.name = name
-
-    def build(self):
-        plugin_path = "dist/plugin"
-        for f in self.source.files():
-            self.target.write(self.target.sep().join((plugin_path, f)), self.source.read(f))
-        t = self.mel_template
-        t = t.replace("<<exec_file_name>>", '"\'{}.py\'"'.format(self.name))
-        t = t.replace("<<ann>>", '"{}"'.format(self.ann))
-        t = t.replace("<<plugin_path>>", '"{}/"'.format(plugin_path))
-        # 以系统编码写入安装文件
-        self.target.write(self.install_mel_name, (self.mel_template_lib_code + t).encode(locale.getpreferredencoding()))
-        self.target.write(self.target.sep().join(("dist", "log.ico")), self.log)
-
-
-if __name__ == "__main__":
-    from pyeal.res import LocalRes, DirectoryRes
-
-    root = r"D:\backup_to_cloud\dev\python_for_maya\package\seal\test"
-    src = LocalRes(root + r"\src")
-    build = LocalRes(root + r"\build")
-    mid = DirectoryRes(build, "mid")
-    d0 = DirectoryRes(mid, "0")
-    dist = DirectoryRes(build, "dist")
-    EncapsulationBuilder(src,
-                         d0,
-                         "test_seal_name",
-                         u'''import main
-from main import main
-main()''').build()
-    InstallBuilder(d0, dist, "", "这是一段注释~").build()
+def seal(source, target, name, code, imp_name=None):
+    """
+    :type source: BaseRes
+    :type target: BaseRes
+    :type name: AnyStr
+    :type code: AnyStr
+    :type imp_name: AnyStr or None
+    """
+    return Sealer(source, target, name, code, imp_name).build()

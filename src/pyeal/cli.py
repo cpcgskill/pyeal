@@ -13,13 +13,14 @@ from __future__ import unicode_literals, print_function, division
 
 import datetime
 import json
+import locale
 import os.path
 import sys
 import uuid
 from collections import OrderedDict
 
 from pyeal.res import LocalRes, DirectoryRes, MergeRes
-from pyeal.core import EncapsulationBuilder, InstallBuilder
+from pyeal.seal import seal
 from pyeal.exc import *
 from pyeal._command import call_command
 
@@ -82,49 +83,79 @@ class Config(object):
 
 
 def target_is_exec(config):
-    EncapsulationBuilder(
+    """
+    :type config: Config
+    """
+    seal(
         MergeRes(config.src, config.lib),
         config.out,
         config.name,
         config.get_script(),
         config.get('imp_name', config.name),
-    ).build()
+    )
 
 
 def target_is_maya_plugin(config):
+    """
+    :type config: Config
+    """
     m0 = DirectoryRes(config.middle, "m0")
 
-    EncapsulationBuilder(
+    seal(
         MergeRes(config.src, config.lib),
         m0,
         config.name,
         config.get_script(),
         config.get('imp_name', config.name)
-    ).build()
+    )
+    plugin_path = "dist/plugin"
+    for f in m0.files():
+        config.out.write('/'.join((plugin_path, f)), m0.read(f))
+    with open(os.sep.join((PATH, 'assets', "mel_template_lib.mel")), "rb") as f:
+        mel_template_lib_code = f.read().decode("utf-8")
+    mel_template = r'''
+startInstall(
+"exec(compile(open(plugin_path+" + <<exec_file_name>> + ",'rb').read(), plugin_path+" + <<exec_file_name>> + ", 'exec'), globals(), locals())", 
+<<ann>>, 
+"dist/log.ico", 
+<<plugin_path>>
+);
+'''
 
-    InstallBuilder(
-        m0,
-        config.out,
-        log=config.get_icon(),
-        ann=config.get("annotation", "这个插件作者很懒没有写注释哦~"),
-        name=config.get('imp_name', config.name),
-    ).build()
+    mel_template = mel_template.replace(
+        '<<exec_file_name>>',
+        '"\'{}.py\'"'.format(config.name)
+    )
+    mel_template = mel_template.replace(
+        '<<ann>>',
+        '"{}"'.format(config.get('annotation', '这个插件作者很懒没有写注释哦~'))
+    )
+    mel_template = mel_template.replace(
+        '<<plugin_path>>',
+        '"{}/"'.format(plugin_path)
+    )
+    # 以系统编码写入安装文件
+    config.out.write('install.mel', (mel_template_lib_code + mel_template).encode(locale.getpreferredencoding()))
+    config.out.write('/'.join(('dist', 'log.ico')), config.get_icon())
 
 
 def target_is_template(config):
+    """
+    :type config: Config
+    """
     template = DirectoryRes(config.root, 'template')
     template_output = DirectoryRes(config.out, config.ass('template-output'))
 
     for f in template.files():
         config.out.write(f, template.read(f))
 
-    EncapsulationBuilder(
+    seal(
         MergeRes(config.src, config.lib),
         template_output,
         config.name,
         config.get_script(),
         config.get('imp_name', config.name),
-    ).build()
+    )
 
 
 target_types = {
