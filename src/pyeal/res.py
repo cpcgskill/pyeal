@@ -245,7 +245,7 @@ class LocalRes(BaseRes):
 
     def customize_make_dir(self, path):
         path = os.sep.join((self.root, path))
-        os.mkdir(path)
+        os.makedirs(path)
 
     def customize_remove_dir(self, path):
         path = os.sep.join((self.root, path))
