@@ -47,6 +47,16 @@ class Config(object):
         self.middle = LocalRes(self.middle_path)
         self.out = LocalRes(self.out_path)
 
+    def get_root_res(self):
+        return LocalRes(self.root_path)
+
+    def get_source_res(self):
+        outer_lib_path_list = self.get('outer_lib', [])
+        lib_paths = self.get('lib', ['lib'] + outer_lib_path_list)
+        src_paths = self.get('src', ['src'] + lib_paths)
+        src_res_list = [LocalRes(i) for i in src_paths]
+        return MergeRes(*src_res_list)
+
     def get_config(self):
         return json.loads(self.root.read_string("pyeal.json"))
 
@@ -87,7 +97,7 @@ def target_is_exec(config):
     :type config: Config
     """
     seal(
-        MergeRes(config.src, config.lib),
+        config.get_source_res(),
         config.out,
         config.name,
         config.get_script(),
@@ -102,7 +112,7 @@ def target_is_maya_plugin(config):
     m0 = DirectoryRes(config.middle, "m0")
 
     seal(
-        MergeRes(config.src, config.lib),
+        config.get_source_res(),
         m0,
         config.name,
         config.get_script(),
@@ -150,7 +160,7 @@ def target_is_template(config):
         config.out.write(f, template.read(f))
 
     seal(
-        MergeRes(config.src, config.lib),
+        config.get_source_res(),
         template_output,
         config.name,
         config.get_script(),

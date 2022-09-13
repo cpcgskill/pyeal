@@ -6,38 +6,45 @@ import sys
 
 import setuptools
 
-lib_name = "pyeal"
+lib_name = 'pyeal'
 
-author = "cpcgskill",
-author_email = "cpcgskill@outlook.com"
+author = 'cpcgskill',
+author_email = 'cpcgskill@outlook.com'
 
-version = '0.4.0'
+version = '0.5.0'
 
-description = "Python 打包编译工具"
+description = 'Python 打包编译工具'
 with open("README.md", "rb") as f:
-    long_description = f.read().decode(encoding="utf-8")
+    long_description = f.read().decode(encoding='utf-8')
 
-project_homepage = "https://github.com/cpcgskill/pyeal"
+project_homepage = 'https://github.com/cpcgskill/pyeal'
 project_urls = {
-    "Bug Tracker": "https://github.com/cpcgskill/seal/issues",
+    'Bug Tracker': 'https://github.com/cpcgskill/seal/issues',
 }
-license = "Apache Software License (Apache 2.0)"
+license = 'Apache Software License (Apache 2.0)'
 
-python_requires = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+python_requires = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*'
 install_requires = [
     'astunparse==1.6.3',
 ]
 
-if sys.version_info.major < 3:
-    console_scripts = [
-        "pyeal=pyeal.cli:main",
-        "pyeal-py2=pyeal.cli:main",
-    ]
-else:
-    console_scripts = [
-        "pyeal=pyeal.cli:main",
-        "pyeal-py3=pyeal.cli:main",
-    ]
+console_scripts = [
+    "pyeal=pyeal.cli:main",
+]
+# # 想按照不同版本启用不同入口的但是whl是静态打包好了的，并且不知道怎么指定。gz格式则不知道为什么单独打包会报错
+# # error removing pyeal-0.5.0: [WinError 145] 目录不是空的。: 'pyeal-0.5.0\\src'
+# # error removing pyeal-0.5.0: [WinError 145] 目录不是空的。: 'pyeal-0.5.0'
+# # 明明whl和gz一起打包时是正常的，也找不到相关资料，所以暂时不实现这个功能了
+# if sys.version_info.major < 3:
+#     console_scripts = [
+#         "pyeal=pyeal.cli:main",
+#         "pyeal-py2=pyeal.cli:main",
+#     ]
+# else:
+#     console_scripts = [
+#         "pyeal=pyeal.cli:main",
+#         "pyeal-py3=pyeal.cli:main",
+#     ]
 
 setuptools.setup(
     name=lib_name,
@@ -66,7 +73,7 @@ setuptools.setup(
     package_dir={"": "src"},
     # # 使用自动搜索
     # packages=setuptools.find_packages(where="src"),
-    packages=['pyeal', 'pyeal.code'],
+    packages=['pyeal', 'pyeal.codekit'],
     python_requires=python_requires,
     # 指定依赖
     install_requires=install_requires,

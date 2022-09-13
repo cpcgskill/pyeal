@@ -130,6 +130,8 @@ class Sealer(object):
         return code.encode("utf-8")
 
     def build(self):
+        for d in self.source.dirs():
+            self.target.make_dir(d)
         for f in self.source.files():
             self.target.write(self.target_path(f), self.source.read(f))
         for m, f in self.module_data.module_name_and_paths():
