@@ -232,12 +232,20 @@ class LocalRes(BaseRes):
             return f.read()
 
     def customize_write(self, path, data):
+        if path.find('elementwise_logical_ops_test.test_is_member_of.zip') != -1:
+            pass
         path = os.sep.join((self.root, path))
         dir_, name = os.path.split(path)
         if not os.path.isdir(dir_):
             os.makedirs(dir_)
-        with open(path, "wb") as f:
-            return f.write(data)
+        try:
+            with open(path, "wb") as f:
+                return f.write(data)
+        except IOError as ex:
+            if len(path) > 256:
+                raise IOError('Accidents caused by too long path lengths at compile time', ex)
+            else:
+                raise
 
     def customize_remove(self, path):
         path = os.sep.join((self.root, path))
