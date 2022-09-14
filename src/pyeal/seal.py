@@ -55,6 +55,9 @@ class Sealer(object):
         else:
             return "{}_{}".format(self.seal_name(), p)
 
+    def target_dir_path(self, p):
+        return "{}_{}".format(self.seal_name(), p)
+
     def compile_import_node(self, n, m):
         alias_list = []
         for i in n.names:
@@ -131,7 +134,7 @@ class Sealer(object):
 
     def build(self):
         for d in self.source.dirs():
-            self.target.make_dir(d)
+            self.target.make_dir(self.target_dir_path(d))
         for f in self.source.files():
             self.target.write(self.target_path(f), self.source.read(f))
         for m, f in self.module_data.module_name_and_paths():
