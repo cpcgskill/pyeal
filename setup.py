@@ -19,7 +19,7 @@ with open("README.md", "rb") as f:
 
 project_homepage = 'https://github.com/cpcgskill/pyeal'
 project_urls = {
-    'Bug Tracker': 'https://github.com/cpcgskill/seal/issues',
+    'Bug Tracker': 'https://github.com/cpcgskill/pyeal/issues',
 }
 license = 'Apache Software License (Apache 2.0)'
 
