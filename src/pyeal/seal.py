@@ -134,9 +134,15 @@ class Sealer(object):
 
     def build(self):
         for d in self.source.dirs():
-            self.target.make_dir(self.target_dir_path(d))
+            if d.split('/')[-1] != '__pycache__':
+                self.target.make_dir(self.target_dir_path(d))
         for f in self.source.files():
-            self.target.write(self.target_path(f), self.source.read(f))
+            if f.split('.')[-1] == 'pyc':
+                test_f = '.'.join(f.split('.')[:-1] + ['py'])
+                if not self.source.is_file(test_f):
+                    self.target.write(self.target_path(f), self.source.read(f))
+            else:
+                self.target.write(self.target_path(f), self.source.read(f))
         for m, f in self.module_data.module_name_and_paths():
             code = self.source.read(f)
             code = self.compile_module(code, m)
