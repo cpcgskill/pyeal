@@ -11,7 +11,7 @@ lib_name = 'pyeal'
 author = 'cpcgskill',
 author_email = 'cpcgskill@outlook.com'
 
-version = '0.5.1'
+version = '0.6.0'
 
 description = 'Python 打包编译工具'
 with open("README.md", "rb") as f:
