@@ -12,6 +12,7 @@ u"""
 from __future__ import unicode_literals, print_function
 
 import os
+import sys
 from abc import abstractmethod
 
 from pyeal.exc import *
@@ -206,9 +207,11 @@ class BaseRes(object):
         :type path: AnyStr
         """
         for f in self.files(path):
-            self.customize_remove(f)
+            # self.customize_remove(f)
+            self.remove(f)
         for d in reversed(self.dirs(path)):
-            self.customize_remove_dir(d)
+            # self.customize_remove_dir(d)
+            self.remove_dir(d)
         return self
 
 
@@ -219,6 +222,9 @@ class LocalRes(BaseRes):
         :type root: AnyStr
         """
         self.root = os.path.abspath(root)
+        if sys.platform == 'win32':
+            # if len(self.root) > 256:
+            self.root = '\\\\?\\' + self.root
 
     def __str__(self):
         return str(self.__unicode__())
@@ -228,27 +234,48 @@ class LocalRes(BaseRes):
 
     def customize_read(self, path):
         path = os.sep.join((self.root, path))
+        # if len(path) > 256:
+        #     path = '\\\\?\\' + path
         with open(path, "rb") as f:
             return f.read()
 
     def customize_write(self, path, data):
-        if path.find('elementwise_logical_ops_test.test_is_member_of.zip') != -1:
-            pass
+        # if path.find('elementwise_logical_ops_test.test_is_member_of.zip') != -1:
+        #     pass
         path = os.sep.join((self.root, path))
         dir_, name = os.path.split(path)
         if not os.path.isdir(dir_):
             os.makedirs(dir_)
-        try:
-            with open(path, "wb") as f:
-                return f.write(data)
-        except IOError as ex:
-            if len(path) > 256:
-                raise IOError('Accidents caused by too long path lengths at compile time', ex)
-            else:
-                raise
+        # if sys.platform == 'win32':
+        #     try:
+        #         with open(path, "wb") as f:
+        #             return f.write(data)
+        #     except IOError as ex:
+        #         if len(path) > 767:
+        #             raise IOError('Accidents caused by too long path lengths at compile time', ex)
+        #         else:
+        #             raise
+        # else:
+        #     with open(path, "wb") as f:
+        #         return f.write(data)
+        with open(path, "wb") as f:
+            return f.write(data)
 
     def customize_remove(self, path):
         path = os.sep.join((self.root, path))
+        # old_cwd = os.getcwd()
+        # try:
+        #     os.chdir(os.path.dirname(path))
+        #
+        #     new_path = './' + path.split(self.customize_sep())[-1]
+        #     try:
+        #         os.remove(new_path)
+        #     except WindowsError as ex:
+        #         raise WindowsError('path {} error! {}'.format(path, ex))
+        # finally:
+        #     os.chdir(old_cwd)
+        # if len(path) > 256:
+        #     path = '\\\\?\\' + path
         os.remove(path)
 
     def customize_make_dir(self, path):
