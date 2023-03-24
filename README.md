@@ -73,7 +73,7 @@ python -m pyeal build
 
 #### 文件约定
 
-* logo.ico logo文件, 在构建类型为maya-plugin或其他需要图标的编译类型的时候被使用的文件.
+* icon.ico logo文件, 在构建类型为maya-plugin或其他需要图标的编译类型的时候被使用的文件.
 * pyeal.json 构建配置文件.
 * index.py 在编写复杂的启动脚本时, 替代exec_script配置项的文件.
 * src/ 源代码目录.
