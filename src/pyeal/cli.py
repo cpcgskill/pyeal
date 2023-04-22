@@ -11,6 +11,9 @@ u"""
 """
 from __future__ import unicode_literals, print_function, division
 
+if False:
+    from typing import *
+
 import datetime
 import json
 import locale
@@ -19,21 +22,21 @@ import sys
 import uuid
 from collections import OrderedDict
 
+import argparse
+
 from pyeal.res import LocalRes, DirectoryRes, MergeRes
 from pyeal.seal import seal
 from pyeal.exc import *
 from pyeal._command import call_command
 
-if False:
-    from typing import List, Tuple, Dict, AnyStr, Any, Callable, Optional
-
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 class Config(object):
-    def __init__(self, root):
+    def __init__(self, root, config_file='pyeal.json'):
         root = os.path.abspath(root)
         self.root_path = os.path.abspath(root)
+        self.config_file = config_file
         self.src_path = os.sep.join((self.root_path, 'src'))
         self.lib_path = os.sep.join((self.root_path, 'lib'))
         self.build_path = os.sep.join((self.root_path, 'build'))
@@ -58,7 +61,7 @@ class Config(object):
         return MergeRes(*src_res_list)
 
     def get_config(self):
-        return json.loads(self.root.read_string("pyeal.json"))
+        return json.loads(self.root.read_string(self.config_file))
 
     @property
     def config_data(self):
@@ -255,7 +258,7 @@ def cmd_init(config, template_name=None, package_name=None):
     else:
         template['name'] = package_name
 
-    config.root.write_string("pyeal.json", json.dumps(template, indent=2).encode("utf-8"))
+    config.root.write_string(config.config_file, json.dumps(template, indent=2).encode("utf-8"))
 
     src = os.sep.join((config.root_path, "src"))
     if not os.path.isdir(src):
@@ -285,7 +288,12 @@ commands = {
 
 def main():
     root = os.path.abspath(".")
-    command = commands.get(sys.argv[1])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command', help='your command')
+    parser.add_argument('-cf', '--config_file', type=str, default='pyeal.json', help='config file')
+    args = parser.parse_args()
+    command = commands.get(args.command)
     if command is None:
         raise SealException("未知指令")
-    command(Config(root), *sys.argv[2:])
+    command(Config(root, args.config_file), *sys.argv[2:])
