@@ -199,37 +199,6 @@ def _call_command_list(command_list, build_data):
             raise SealException("未知的命令格式")
 
 
-def cmd_build(config, *args):
-    """
-    :type config: Config
-    """
-    config.build.clean()
-    command_list_at_start = config.get('command_list_at_start', [])
-    command_list_at_end = config.get('command_list_at_end', [])
-    build_data = {
-        'build_uuid': uuid.uuid4().hex,
-        'build_time': datetime.datetime.now(),
-        'src_path': config.src_path,
-        'lib_path': config.lib_path,
-        'build_path': config.build_path,
-        'middle_path': config.middle_path,
-        'out_path': config.out_path,
-        'args': args,
-        'name': config.name,
-    }
-
-    _call_command_list(command_list_at_start, build_data)
-
-    target_type_func = target_types.get(config.type)
-
-    if target_type_func is None:
-        raise SealException("未知编译类型")
-
-    target_type_func(config)
-
-    _call_command_list(command_list_at_end, build_data)
-
-
 config_templates = {
     "package": OrderedDict([
         ("type", "package"),
@@ -242,58 +211,134 @@ config_templates = {
 }
 
 
-def cmd_init(config, template_name=None, package_name=None):
-    """
-    :type config: Config
-    :type template_name: AnyStr
-    :type package_name: AnyStr
-    """
-    if template_name is None:
-        template_name = 'package'
+class SubCommand(object):
+    name = None
+    help = ''
 
-    template = config_templates[template_name]
+    def __init__(self, parser):
+        # type: (argparse.ArgumentParser) -> None
+        self.parser = parser
+        self.parser.set_defaults(func=self.process)
+        self.init_parser()
 
-    if package_name is None:
-        template['name'] = 'your_name'
-    else:
-        template['name'] = package_name
+    def init_parser(self):
+        raise NotImplementedError()
 
-    config.root.write_string(config.config_file, json.dumps(template, indent=2).encode("utf-8"))
-
-    src = os.sep.join((config.root_path, "src"))
-    if not os.path.isdir(src):
-        os.makedirs(src)
-    build = os.sep.join((config.root_path, "build"))
-    if not os.path.isdir(build):
-        os.makedirs(build)
-
-    if template_name == 'maya-plugin':
-        with open(os.sep.join((PATH, 'assets', "icon.ico")), "rb") as f:
-            config.root.write("icon.ico", f.read())
+    def process(self, args):
+        raise NotImplementedError()
 
 
-def cmd_clean(config):
-    """
-    :type config: Config
-    """
-    config.build.clean()
+class BuildCommand(SubCommand):
+    name = 'build'
+    help = 'build project'
+
+    def init_parser(self):
+        # 获得所有位置参数，传递给build data。
+        self.parser.add_argument('args', nargs='*', help='args')
+        # config
+        self.parser.add_argument('-cf', '--config_file', type=str, default='pyeal.json', help='config file')
+
+    def process(self, args):
+        config = Config(os.path.abspath("."), args.config_file)
+        config.build.clean()
+        command_list_at_start = config.get('command_list_at_start', [])
+        command_list_at_end = config.get('command_list_at_end', [])
+        build_data = {
+            'build_uuid': uuid.uuid4().hex,
+            'build_time': datetime.datetime.now(),
+            'src_path': config.src_path,
+            'lib_path': config.lib_path,
+            'build_path': config.build_path,
+            'middle_path': config.middle_path,
+            'out_path': config.out_path,
+            'args': args.args,
+            'name': config.name,
+        }
+
+        _call_command_list(command_list_at_start, build_data)
+
+        target_type_func = target_types.get(config.type)
+
+        if target_type_func is None:
+            raise SealException("未知编译类型")
+
+        target_type_func(config)
+
+        _call_command_list(command_list_at_end, build_data)
 
 
-commands = {
-    "build": cmd_build,
-    "init": cmd_init,
-    "clean": cmd_clean,
-}  # type: Dict[AnyStr, Callable[[Config, ...], None]]
+class InitCommand(SubCommand):
+    name = 'init'
+    help = 'init project, you can use -t to choose a template'
+
+    def init_parser(self):
+        self.parser.add_argument('-t', '--template',
+                                 choices=config_templates.keys(),
+                                 type=str,
+                                 default='package',
+                                 help='choose a template'
+                                 )
+        self.parser.add_argument('-n', '--name', type=str, default='your_name', help='package name')
+        self.parser.add_argument('-cf', '--config_file', type=str, default='pyeal.json',
+                                 help='config file')
+
+    def process(self, args):
+        root_path = os.path.abspath(".")
+        root = LocalRes(root_path)
+
+        template = config_templates[args.template]
+        template['name'] = args.name
+
+        root.write_string(
+            args.config_file,
+            json.dumps(template, indent=2, ensure_ascii=False).encode("utf-8")
+        )
+
+        src = os.sep.join((root_path, "src"))
+        if not os.path.isdir(src):
+            os.makedirs(src)
+        build = os.sep.join((root_path, "build"))
+        if not os.path.isdir(build):
+            os.makedirs(build)
+
+        if args.template == 'maya-plugin':
+            with open(os.sep.join((PATH, 'assets', "icon.ico")), "rb") as f:
+                root.write("icon.ico", f.read())
 
 
-def main():
+class CleanCommand(SubCommand):
+    name = 'clean'
+    help = 'clean project'
+
+    def init_parser(self):
+        self.parser.add_argument('-cf', '--config_file', type=str, default='pyeal.json', help='config file')
+
+    def process(self, args):
+        config = Config(os.path.abspath("."), args.config_file)
+        config.build.clean()
+
+
+commands = [
+    BuildCommand,
+    InitCommand,
+    CleanCommand,
+]  # type: List[SubCommand]
+
+
+def main(argv):
     root = os.path.abspath(".")
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('command', help='your command')
-    parser.add_argument('-cf', '--config_file', type=str, default='pyeal.json', help='config file')
-    args = parser.parse_args()
-    command = commands.get(args.command)
-    if command is None:
-        raise SealException("未知指令")
-    command(Config(root, args.config_file), *sys.argv[2:])
+    parser = argparse.ArgumentParser(
+        description='Python 打包编译工具',
+        prog='pyeal',
+    )
+    subparsers = parser.add_subparsers(
+        title='subcommands',
+        description='valid subcommands',
+        help='sub-command help',
+    )
+    for sub_command in commands:
+        sub_command(subparsers.add_parser(sub_command.name, help=sub_command.help))
+
+    args = parser.parse_args(argv)
+    args.func(args)

@@ -10,7 +10,8 @@ u"""
 
 """
 from __future__ import unicode_literals, print_function
+import sys
 from pyeal.cli import main
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
