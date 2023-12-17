@@ -208,6 +208,11 @@ config_templates = {
         ("type", "maya-plugin"),
         ("exec_script", ""),
     ]),
+    "template": OrderedDict([
+        ("type", "template"),
+        ("exec_script", ""),
+        ("template-output", "src"),
+    ]),
 }
 
 

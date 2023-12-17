@@ -59,3 +59,18 @@ class TestCli(unittest.TestCase):
         assert os.path.exists(os.path.join(test_dir, 'build', 'out', 'dist', 'plugin', 'test_name.py'))
         assert os.path.exists(os.path.join(test_dir, 'build', 'out', 'dist', 'log.ico'))
         cli.main(['clean'])
+
+
+        test_dir = os.path.join(test_root_dir, 'test3')
+        self.force_an_empty_directory(test_dir)
+
+        os.chdir(test_dir)
+        cli.main(['init', '-t', 'template', '-n', 'test_name'])
+        with open(os.path.join(test_dir, 'src', 'test.py'), 'w') as f:
+            f.write('print("hello world!")')
+        os.makedirs(os.path.join(test_dir, 'template/src'))
+        with open(os.path.join(test_dir, 'template/src', 'test.txt'), 'w') as f:
+            f.write('the file in template')
+        cli.main(['build'])
+        assert os.path.exists(os.path.join(test_dir, 'build', 'out', 'src', 'test_name.py'))
+        cli.main(['clean'])
