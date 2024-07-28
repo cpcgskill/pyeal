@@ -1,6 +1,3 @@
-export MAYA_BIN = C:\Program Files\Autodesk\Maya2022\bin
-export MAYA_PY = ${MAYA_BIN}/mayapy.exe
-
 .PHONY: clean make_rst_from_markdown dist publish test_publish
 .IGNORE: clean
 
@@ -12,14 +9,14 @@ make_rst_from_markdown:
 	pandoc -f markdown -t rst  README.md -o README.rst
 
 dist: clean make_rst_from_markdown
-	"${MAYA_PY}" -m pip install 'twine>=1.5.0'
-	"${MAYA_PY}" setup.py bdist_wheel
+	py -3.10 -m pip install 'twine>=1.5.0'
+	py -3.10 -m build
 
 check_dist: dist
-	"${MAYA_PY}" -m twine check dist/*
+	py -3.10 -m twine check dist/*
 
-publish: dist
-	"${MAYA_PY}" -m twine upload --repository pypi dist/*
+publish: dist check_dist
+	py -3.10 -m twine upload --repository pypi dist/*
 
-test_publish: dist
-	"${MAYA_PY}" -m twine upload --repository testpypi dist/*
+test_publish: dist check_dist
+	py -3.10 -m twine upload --repository testpypi dist/*
