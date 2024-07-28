@@ -296,7 +296,7 @@ class InitCommand(SubCommand):
 
         root.write_string(
             args.config_file,
-            json.dumps(template, indent=2, ensure_ascii=False).encode("utf-8")
+            json.dumps(template, indent=2, ensure_ascii=False)
         )
 
         src = os.sep.join((root_path, "src"))

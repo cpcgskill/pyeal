@@ -21,6 +21,9 @@ if False:
     from typing import List, Tuple, Dict, AnyStr, Any
 
 
+str_t = (type(u''), str)
+bytes_t = (type(b''), bytes)
+
 class BaseRes(object):
     @abstractmethod
     def customize_read(self, path):
@@ -126,7 +129,11 @@ class BaseRes(object):
         :type path: AnyStr
         :type data: AnyStr
         """
-        self.write(path, data.encode('utf-8'))
+        if isinstance(data, str_t):
+            data = data.encode('utf-8')
+        elif not isinstance(data, bytes_t):
+            raise TypeError('data must be str or bytes')
+        self.write(path, data)
         return self
 
     def remove(self, path):
