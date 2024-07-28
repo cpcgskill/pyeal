@@ -8,13 +8,13 @@ import setuptools
 
 lib_name = 'pyeal'
 
-author = 'cpcgskill',
+author = 'cpcgskill'
 author_email = 'cpcgskill@outlook.com'
 
-version = '1.0.1'
+version = '1.0.4'
 
 description = 'Python 打包编译工具'
-with open("README.md", "rb") as f:
+with open("README.rst", "rb") as f:
     long_description = f.read().decode(encoding='utf-8')
 
 project_homepage = 'https://github.com/cpcgskill/pyeal'
@@ -53,8 +53,8 @@ setuptools.setup(
     author=author,
     author_email=author_email,
     description=description,
+    long_description_content_type="text/x-rst",
     long_description=long_description,
-    long_description_content_type="text/markdown",
     url=project_homepage,
     project_urls=project_urls,
     license=license,
