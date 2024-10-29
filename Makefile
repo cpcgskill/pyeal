@@ -2,21 +2,21 @@
 .IGNORE: clean
 
 clean:
-	powershell Remove-Item -Recurse -Force ./build
-	powershell Remove-Item -Recurse -Force ./dist
+	rmdir /s/q "./dist"
 
 make_rst_from_markdown:
 	pandoc -f markdown -t rst  README.md -o README.rst
 
 dist: clean make_rst_from_markdown
-	py -3.10 -m pip install 'twine>=1.5.0'
-	py -3.10 -m build
+	py -m pip install 'twine>=1.5.0' 'build>=1.2.2'
+	py -m build
 
 check_dist: dist
-	py -3.10 -m twine check dist/*
+	twine check dist/*
 
-publish: dist check_dist
-	py -3.10 -m twine upload --repository pypi dist/*
+publish: check_dist dist
+	py -m twine upload --repository pypi dist/*
 
-test_publish: dist check_dist
-	py -3.10 -m twine upload --repository testpypi dist/*
+
+test_publish: check_dist dist
+	py -m twine upload --repository testpypi dist/*
