@@ -239,8 +239,11 @@ class LocalRes(BaseRes):
     def __unicode__(self):
         return "{}(root={})".format(self.__class__.__name__, repr(self.root))
 
+    def __post_process_path(self, path):
+        return os.path.abspath(os.sep.join((self.root, path)))
+
     def customize_read(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         # if len(path) > 256:
         #     path = '\\\\?\\' + path
         with open(path, "rb") as f:
@@ -249,7 +252,7 @@ class LocalRes(BaseRes):
     def customize_write(self, path, data):
         # if path.find('elementwise_logical_ops_test.test_is_member_of.zip') != -1:
         #     pass
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         dir_, name = os.path.split(path)
         if not os.path.isdir(dir_):
             os.makedirs(dir_)
@@ -269,7 +272,7 @@ class LocalRes(BaseRes):
             return f.write(data)
 
     def customize_remove(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         # old_cwd = os.getcwd()
         # try:
         #     os.chdir(os.path.dirname(path))
@@ -286,22 +289,22 @@ class LocalRes(BaseRes):
         os.remove(path)
 
     def customize_make_dir(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         os.makedirs(path)
 
     def customize_remove_dir(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         os.rmdir(path)
 
     def customize_sep(self):
         return os.sep
 
     def customize_is_dir(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         return os.path.isdir(path)
 
     def customize_is_file(self, path):
-        path = os.sep.join((self.root, path))
+        path = self.__post_process_path(path)
         return os.path.isfile(path)
 
     def customize_walk(self):
